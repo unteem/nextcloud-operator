@@ -3,6 +3,7 @@ module git.indie.host/nextcloud-operator
 go 1.13
 
 require (
+	github.com/coreos/etcd v3.3.10+incompatible
 	github.com/go-logr/logr v0.1.0
 	github.com/imdario/mergo v0.3.8
 	github.com/onsi/ginkgo v1.10.2

@@ -13,10 +13,11 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package common
 
 import (
 	"github.com/imdario/mergo"
+	"k8s.io/apimachinery/pkg/labels"
 
 	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
 )
@@ -64,6 +65,24 @@ func NewCommon(app *appsv1beta1.Nextcloud) *Common {
 		Settings: settings,
 		Runtime:  runtime,
 	}
+}
+
+func (c *Common) Labels(component string) labels.Set {
+	partOf := "nextcloud"
+	//	if o.ObjectMeta.Labels != nil && len(o.ObjectMeta.Labels["app.kubernetes.io/part-of"]) > 0 {
+	//		partOf = o.ObjectMeta.Labels["app.kubernetes.io/part-of"]
+	//	}
+
+	labels := labels.Set{
+		"app.kubernetes.io/name":     "nextcloud",
+		"app.kubernetes.io/part-of":  partOf,
+		"app.kubernetes.io/instance": c.Owner.ObjectMeta.Name,
+		//	"app.kubernetes.io/version":    c.Owner.Spec.AppVersion,
+		"app.kubernetes.io/component":  component,
+		"app.kubernetes.io/managed-by": "nextcloud-operator.libre.sh",
+	}
+
+	return labels
 }
 
 //func (c *Common) SetDefaults() {

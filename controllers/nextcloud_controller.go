@@ -27,9 +27,9 @@ import (
 
 	"github.com/presslabs/controller-util/syncer"
 
-	"k8s.io/apimachinery/pkg/labels"
-
 	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
+	application "git.indie.host/nextcloud-operator/components/app"
+	cron "git.indie.host/nextcloud-operator/components/cron"
 )
 
 // NextcloudReconciler reconciles a Nextcloud object
@@ -46,6 +46,11 @@ func ignoreNotFound(err error) error {
 	}
 	return err
 }
+
+func (r *NextcloudReconciler) GetClient() client.Client          { return r.Client }
+func (r *NextcloudReconciler) GetScheme() *runtime.Scheme        { return r.Scheme }
+func (r *NextcloudReconciler) GetRecorder() record.EventRecorder { return r.Recorder }
+func (r *NextcloudReconciler) GetLogger() logr.Logger            { return r.Log }
 
 // +kubebuilder:rbac:groups=apps.libre.sh,resources=nextclouds,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=apps.libre.sh,resources=nextclouds/status,verbs=get;update;patch
@@ -65,9 +70,9 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 	// fmt.Println(app)
 
-	componentApp := NewApp(app)
+	componentApp := application.NewApp(app)
 	//	componentApp.MutateDeployment()
-	componentCron := NewCron(app)
+	componentCron := cron.NewCron(app)
 
 	objectSyncer := componentApp.NewDeploymentSyncer(r)
 	serviceSyncer := componentApp.NewServiceSyncer(r)
@@ -98,58 +103,3 @@ func (r *NextcloudReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		For(&appsv1beta1.Nextcloud{}).
 		Complete(r)
 }
-
-func (c *Common) Labels(component string) labels.Set {
-	partOf := "nextcloud"
-	//	if o.ObjectMeta.Labels != nil && len(o.ObjectMeta.Labels["app.kubernetes.io/part-of"]) > 0 {
-	//		partOf = o.ObjectMeta.Labels["app.kubernetes.io/part-of"]
-	//	}
-
-	labels := labels.Set{
-		"app.kubernetes.io/name":     "nextcloud",
-		"app.kubernetes.io/part-of":  partOf,
-		"app.kubernetes.io/instance": c.Owner.ObjectMeta.Name,
-		//	"app.kubernetes.io/version":    c.Owner.Spec.AppVersion,
-		"app.kubernetes.io/component":  component,
-		"app.kubernetes.io/managed-by": "nextcloud-operator.libre.sh",
-	}
-
-	return labels
-}
-
-type Component interface {
-	GetObjects() runtime.Object
-}
-
-//type Cron struct {
-//	Deployment
-//	Service
-//	Secret
-//	Confimap
-//}
-
-//type Cli struct {
-//	Deployment
-//	Service
-//	Secret
-//	Confimap
-//}
-
-//type Web struct {
-//	Deployment
-//	Service
-//	Secret
-//	Confimap
-//}
-
-//type Database struct {
-//	Container
-//	Secret
-//	Confimap
-//}
-
-//type Storage struct {
-//	Container
-//	Secret
-//	Confimap
-//}

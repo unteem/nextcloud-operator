@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package cron
 
 import (
 	"github.com/presslabs/controller-util/syncer"
@@ -21,24 +21,27 @@ import (
 	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
+
+	common "git.indie.host/nextcloud-operator/components/common"
+	interfaces "git.indie.host/nextcloud-operator/interfaces"
 )
 
 type Cron struct {
-	*Common
+	*common.Common
 	CronJob batchv1beta1.CronJob
 }
 
 func NewCron(nc *appsv1beta1.Nextcloud) *Cron {
 	cron := &Cron{}
-	cron.Common = NewCommon(nc)
+	cron.Common = common.NewCommon(nc)
 	cron.Owner = nc
 	cron.CronJob.SetName("test")
 	cron.CronJob.SetNamespace(cron.Owner.Namespace)
 	return cron
 }
 
-func (cron *Cron) NewCronJobSyncer(r *NextcloudReconciler) syncer.Interface {
-	return syncer.NewObjectSyncer("CronJob", cron.Owner, &cron.CronJob, r.Client, r.Scheme, cron.MutateCronJob)
+func (cron *Cron) NewCronJobSyncer(r interfaces.Reconcile) syncer.Interface {
+	return syncer.NewObjectSyncer("CronJob", cron.Owner, &cron.CronJob, r.GetClient(), r.GetScheme(), cron.MutateCronJob)
 }
 
 func (cron *Cron) MutateCronJob() error {

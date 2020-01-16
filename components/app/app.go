@@ -13,7 +13,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package application
 
 import (
 	"fmt"
@@ -28,10 +28,12 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
+	common "git.indie.host/nextcloud-operator/components/common"
+	interfaces "git.indie.host/nextcloud-operator/interfaces"
 )
 
 type App struct {
-	*Common
+	*common.Common
 	Deployment appsv1.Deployment
 	Service    corev1.Service
 	Ingress    networking.Ingress
@@ -39,7 +41,7 @@ type App struct {
 
 func NewApp(nc *appsv1beta1.Nextcloud) *App {
 	app := &App{}
-	app.Common = NewCommon(nc)
+	app.Common = common.NewCommon(nc)
 	app.Owner = nc
 	app.Service.Name = "test"
 	app.Service.Namespace = app.Owner.Namespace
@@ -51,16 +53,16 @@ func NewApp(nc *appsv1beta1.Nextcloud) *App {
 	return app
 }
 
-func (app *App) NewDeploymentSyncer(r *NextcloudReconciler) syncer.Interface {
-	return syncer.NewObjectSyncer("Deployment", app.Owner, &app.Deployment, r.Client, r.Scheme, app.MutateDeployment)
+func (app *App) NewDeploymentSyncer(r interfaces.Reconcile) syncer.Interface {
+	return syncer.NewObjectSyncer("Deployment", app.Owner, &app.Deployment, r.GetClient(), r.GetScheme(), app.MutateDeployment)
 }
 
-func (app *App) NewServiceSyncer(r *NextcloudReconciler) syncer.Interface {
-	return syncer.NewObjectSyncer("Service", app.Owner, &app.Service, r.Client, r.Scheme, app.MutateService)
+func (app *App) NewServiceSyncer(r interfaces.Reconcile) syncer.Interface {
+	return syncer.NewObjectSyncer("Service", app.Owner, &app.Service, r.GetClient(), r.GetScheme(), app.MutateService)
 }
 
-func (app *App) NewIngressSyncer(r *NextcloudReconciler) syncer.Interface {
-	return syncer.NewObjectSyncer("Ingress", app.Owner, &app.Ingress, r.Client, r.Scheme, app.MutateIngress)
+func (app *App) NewIngressSyncer(r interfaces.Reconcile) syncer.Interface {
+	return syncer.NewObjectSyncer("Ingress", app.Owner, &app.Ingress, r.GetClient(), r.GetScheme(), app.MutateIngress)
 }
 
 func (app *App) MutateService() error {
