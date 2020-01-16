@@ -29,6 +29,7 @@ import (
 
 	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
 	application "git.indie.host/nextcloud-operator/components/app"
+	cli "git.indie.host/nextcloud-operator/components/cli"
 	cron "git.indie.host/nextcloud-operator/components/cron"
 )
 
@@ -71,14 +72,17 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	// fmt.Println(app)
 
 	componentApp := application.NewApp(app)
-	//	componentApp.MutateDeployment()
 	componentCron := cron.NewCron(app)
+	componentCLI := cli.CreateAndInit(app)
 
 	secretSyncer := componentApp.NewSecretSyncer(r)
 	objectSyncer := componentApp.NewDeploymentSyncer(r)
 	serviceSyncer := componentApp.NewServiceSyncer(r)
 	ingressSyncer := componentApp.NewIngressSyncer(r)
+
 	cronSyncer := componentCron.NewCronJobSyncer(r)
+
+	jobSyncer := componentCLI.NewJobSyncer(r)
 
 	if err := syncer.Sync(context.TODO(), secretSyncer, r.Recorder); err != nil {
 		return ctrl.Result{}, err
@@ -97,6 +101,9 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if err := syncer.Sync(context.TODO(), cronSyncer, r.Recorder); err != nil {
+		return ctrl.Result{}, err
+	}
+	if err := syncer.Sync(context.TODO(), jobSyncer, r.Recorder); err != nil {
 		return ctrl.Result{}, err
 	}
 
