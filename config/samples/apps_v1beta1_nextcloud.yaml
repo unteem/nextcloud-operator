@@ -1,0 +1,61 @@
+apiVersion: apps.libre.sh/v1beta1
+kind: Nextcloud
+metadata:
+  name: nextcloud-sample
+spec:
+  # Add fields here
+  app:
+    enabled: true
+    settings:
+      parameters:
+        envVar:
+          DEFAULT_LANGUAGE: fr
+          DEFAULT_LOCALE: fr
+    runtime:
+      image: test/nextcloud
+      ingressAnnotations:
+        certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+        kubernetes.io/tls-acme: "true"
+        nginx.ingress.kubernetes.io/proxy-body-size: 5g
+      hosts:
+        - cloud.myhost.tld
+      # tlsSecretRef:
+      replicas: 2
+      serviceType: ClusterIP
+  database:
+    enabled: true
+    settings:
+      parameters:
+        envVar:
+          DB_NAME: foo
+          DB_HOST: postgres_host
+          DB_PORT: "5432"
+          DB_TYPE: pgsql
+      secrets:
+      - name: database-secret
+        value: DB_USER
+        key: username
+      - name: database-secret
+        value: DB_PASSWORD
+        key: password 
+  objectStore:
+    enabled: true
+    settings:
+      secrets:
+      - name: s3-secret
+      parameters:
+        envVar:
+          OBJECTSTORE_S3_BUCKET: mybucket
+          OBJECTSTORE_S3_AUTOCREATE: "true"
+          OBJECTSTORE_HOST: myhost
+          OBJECTSTORE_S3_PORT: "443"
+          OBJECTSTORE_S3_SSL: "true"
+          OBJECTSTORE_S3_REGION: default
+  redis:
+    enabled: true
+    settings:
+      parameters:
+        envVar: 
+          REDIS_HOST: redis_host
+          REDIS_PORT: "1234"
+
