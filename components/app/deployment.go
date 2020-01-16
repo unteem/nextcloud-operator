@@ -16,8 +16,6 @@ limitations under the License.
 package application
 
 import (
-	"fmt"
-
 	"github.com/presslabs/controller-util/syncer"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,9 +35,6 @@ func (c *Component) MutateDeployment() error {
 
 	c.Deployment.Spec.Template.ObjectMeta = c.Deployment.ObjectMeta
 	c.Deployment.Spec.Selector = metav1.SetAsLabelSelector(labels)
-
-	// fmt.Println(c.Deployment.Spec.Template.Spec.Containers[0].EnvFrom)
-	fmt.Println(c.Deployment.Spec.Template.Spec.Containers[0].Env[2])
 
 	return nil
 }

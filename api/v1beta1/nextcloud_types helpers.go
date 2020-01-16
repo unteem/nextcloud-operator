@@ -16,6 +16,8 @@ limitations under the License.
 package v1beta1
 
 import (
+	"sort"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
@@ -179,6 +181,11 @@ func (s *Settings) MutateContainerEnvFrom(obj *corev1.Container) error {
 		}
 		envVars = append(envVars, envVar)
 	}
+
+	// Sort var to avoid update of the object if var are not in the same order?
+	sort.SliceStable(envVars, func(i, j int) bool {
+		return envVars[i].Name < envVars[j].Name
+	})
 
 	obj.EnvFrom = envFroms
 	obj.Env = envVars
