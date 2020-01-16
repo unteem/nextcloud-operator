@@ -18,6 +18,7 @@ package web
 import (
 	"github.com/presslabs/controller-util/syncer"
 
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	interfaces "git.indie.host/nextcloud-operator/interfaces"
@@ -28,7 +29,7 @@ func (component *Component) NewDeploymentSyncer(r interfaces.Reconcile) syncer.I
 }
 
 func (component *Component) MutateDeployment() error {
-	component.Settings.MutateDeployment(&component.Deployment)
+	// component.Settings.MutateDeployment(&component.Deployment)
 	component.Runtime.MutateDeployment(&component.Deployment)
 
 	labels := component.Labels("app")
@@ -38,5 +39,39 @@ func (component *Component) MutateDeployment() error {
 	component.Deployment.Spec.Template.ObjectMeta = component.Deployment.ObjectMeta
 	component.Deployment.Spec.Selector = metav1.SetAsLabelSelector(labels)
 
+	component.Deployment.Spec.Template.Spec.Containers[0].VolumeMounts = component.GenContainerVolumeMounts()
+	component.Deployment.Spec.Template.Spec.Volumes = component.GenContainerVolumes()
+
 	return nil
+}
+
+func (c *Component) GenContainerVolumeMounts() []corev1.VolumeMount {
+	var mounts []corev1.VolumeMount
+
+	mount := corev1.VolumeMount{
+		Name:      "nginx",
+		MountPath: "/etc/nginx/nginx.conf",
+		SubPath:   "nginx.conf",
+	}
+
+	mounts = append(mounts, mount)
+
+	return mounts
+}
+
+func (c *Component) GenContainerVolumes() []corev1.Volume {
+	var volumes []corev1.Volume
+
+	volume := corev1.Volume{
+		Name: "nginx",
+		VolumeSource: corev1.VolumeSource{
+			ConfigMap: &corev1.ConfigMapVolumeSource{
+				LocalObjectReference: corev1.LocalObjectReference{
+					Name: c.GetName(),
+				},
+			},
+		},
+	}
+	volumes = append(volumes, volume)
+	return volumes
 }
