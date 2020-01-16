@@ -16,11 +16,11 @@ limitations under the License.
 package v1beta1
 
 import (
-	"fmt"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
+
+	interfaces "git.indie.host/nextcloud-operator/interfaces"
 )
 
 const (
@@ -65,7 +65,6 @@ func (s *Settings) MutatePod(obj *corev1.PodTemplateSpec) error {
 	if len(obj.Spec.Containers) == 0 {
 		obj.Spec.Containers = containers
 	} else {
-		fmt.Println("container in settings")
 		s.MutateContainerEnvFrom(&obj.Spec.Containers[0])
 	}
 	return nil
@@ -81,18 +80,69 @@ func (r *Runtime) MutatePod(obj *corev1.PodTemplateSpec) error {
 	containers = append(containers, *container)
 
 	if len(obj.Spec.Containers) == 0 {
-		fmt.Println("no container in runtime")
 
 		obj.Spec.Containers = containers
 	} else {
-		fmt.Println("container in settings")
 		r.MutateContainer(&obj.Spec.Containers[0])
 	}
 
 	return nil
 }
 
+func (f *From) GetLocalObjectReference() corev1.LocalObjectReference {
+	return f.LocalObjectReference
+}
+
+func (f *From) GetValue() string {
+	return f.Value
+}
+
+func (f *From) GetKey() string {
+	return f.Key
+}
+
+func GenEnv(e interfaces.EnvSource, object string) (corev1.EnvFromSource, corev1.EnvVar) {
+
+	envFrom := corev1.EnvFromSource{}
+	envVar := corev1.EnvVar{}
+
+	if len(e.GetKey()) == 0 && len(e.GetLocalObjectReference().Name) > 0 && len(e.GetValue()) == 0 {
+		if object == "configmap" {
+			ref := &corev1.ConfigMapEnvSource{
+				LocalObjectReference: e.GetLocalObjectReference(),
+			}
+			envFrom.ConfigMapRef = ref
+		} else {
+			ref := &corev1.SecretEnvSource{
+				LocalObjectReference: e.GetLocalObjectReference(),
+			}
+			envFrom.SecretRef = ref
+		}
+	} else if len(e.GetLocalObjectReference().Name) > 0 && len(e.GetValue()) > 0 {
+		envVar.Name = e.GetValue()
+		if object == "configmap" {
+			valueFrom := &corev1.EnvVarSource{
+				ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
+					LocalObjectReference: e.GetLocalObjectReference(),
+					Key:                  e.GetKey(),
+				},
+			}
+			envVar.ValueFrom = valueFrom
+		} else {
+			valueFrom := &corev1.EnvVarSource{
+				SecretKeyRef: &corev1.SecretKeySelector{
+					LocalObjectReference: e.GetLocalObjectReference(),
+					Key:                  e.GetKey(),
+				},
+			}
+			envVar.ValueFrom = valueFrom
+		}
+	}
+	return envFrom, envVar
+}
+
 func (s *Settings) MutateContainerEnvFrom(obj *corev1.Container) error {
+
 	configMapSources := s.Parameters.From
 	secretSources := s.Secrets
 
@@ -100,57 +150,25 @@ func (s *Settings) MutateContainerEnvFrom(obj *corev1.Container) error {
 	envFroms := []corev1.EnvFromSource{}
 
 	for _, source := range configMapSources {
-		if len(source.Key) == 0 {
-			envFrom := corev1.EnvFromSource{}
-			envFrom.ConfigMapRef.LocalObjectReference = source.LocalObjectReference
-			// obj.EnvFrom = append(obj.EnvFrom, envFrom)
-			envFroms = append(envFroms, envFrom)
-		}
-		if len(source.Key) > 0 {
-			envVar := corev1.EnvVar{}
-			valueFrom := &corev1.EnvVarSource{
-				ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: source.Name,
-					},
-					Key: source.Key,
-				},
-			}
-			envVar.Name = source.Value
-			envVar.ValueFrom = valueFrom
-
+		envFrom, envVar := GenEnv(&source, "configmap")
+		if len(envVar.Name) > 0 {
 			envVars = append(envVars, envVar)
-			// obj.Env = append(obj.Env, envVar)
+		}
+		if envFrom.ConfigMapRef != nil {
+			envFroms = append(envFroms, envFrom)
 		}
 	}
-
-	for _, source := range secretSources {
-		if len(source.Key) == 0 {
-			envFrom := corev1.EnvFromSource{
-				SecretRef: &corev1.SecretEnvSource{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: source.Name,
-					},
-				},
+	if &secretSources != nil {
+		for _, source := range secretSources {
+			if &source != nil {
+				envFrom, envVar := GenEnv(&source, "secret")
+				if len(envVar.Name) > 0 {
+					envVars = append(envVars, envVar)
+				}
+				if envFrom.SecretRef != nil {
+					envFroms = append(envFroms, envFrom)
+				}
 			}
-			// obj.EnvFrom = append(obj.EnvFrom, envFrom)
-			envFroms = append(envFroms, envFrom)
-		}
-		if len(source.Key) > 0 {
-			envVar := corev1.EnvVar{}
-			valueFrom := &corev1.EnvVarSource{
-				ConfigMapKeyRef: &corev1.ConfigMapKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: source.Name,
-					},
-					Key: source.Key,
-				},
-			}
-			envVar.Name = source.Value
-			envVar.ValueFrom = valueFrom
-
-			envVars = append(envVars, envVar)
-			// obj.Env = append(obj.Env, envVar)
 		}
 	}
 
