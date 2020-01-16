@@ -17,6 +17,7 @@ package controllers
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/go-logr/logr"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
@@ -32,6 +33,7 @@ import (
 	"git.indie.host/nextcloud-operator/components/common"
 	cron "git.indie.host/nextcloud-operator/components/cron"
 	"git.indie.host/nextcloud-operator/components/web"
+	"git.indie.host/nextcloud-operator/util"
 )
 
 // NextcloudReconciler reconciles a Nextcloud object
@@ -70,7 +72,15 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		// on deleted requests.
 		return ctrl.Result{}, ignoreNotFound(err)
 	}
-	// fmt.Println(app)
+
+	// var phase appsv1beta1.Phase
+
+	phase, err := util.GetAppPhase(app.Status, app.Spec.Version)
+	if err != nil {
+		return ctrl.Result{}, err
+	}
+
+	fmt.Println(phase)
 
 	common := common.CreateAndInit(app)
 
@@ -125,6 +135,16 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	if err := syncer.Sync(context.TODO(), webServiceSyncer, r.Recorder); err != nil {
 		return ctrl.Result{}, err
+	}
+
+	app.Status.Version = app.Spec.Version
+	app.Status.Phase = appsv1beta1.PhaseRunning
+
+	oldStatus := app.Status.DeepCopy()
+	if oldStatus != &app.Status {
+		//	if err := r.Status().Update(ctx, app); err != nil {
+		//		return ctrl.Result{}, err
+		//	}
 	}
 
 	return ctrl.Result{}, nil

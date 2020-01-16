@@ -4,6 +4,7 @@ metadata:
   name: nextcloud-sample
 spec:
   # Add fields here
+  version: "16"
   app:
     enabled: true
     settings:
