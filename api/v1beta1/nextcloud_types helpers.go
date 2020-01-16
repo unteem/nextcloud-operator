@@ -96,11 +96,15 @@ func (s *Settings) MutateContainerEnvFrom(obj *corev1.Container) error {
 	configMapSources := s.Parameters.From
 	secretSources := s.Secrets
 
+	envVars := []corev1.EnvVar{}
+	envFroms := []corev1.EnvFromSource{}
+
 	for _, source := range configMapSources {
 		if len(source.Key) == 0 {
 			envFrom := corev1.EnvFromSource{}
 			envFrom.ConfigMapRef.LocalObjectReference = source.LocalObjectReference
-			obj.EnvFrom = append(obj.EnvFrom, envFrom)
+			// obj.EnvFrom = append(obj.EnvFrom, envFrom)
+			envFroms = append(envFroms, envFrom)
 		}
 		if len(source.Key) > 0 {
 			envVar := corev1.EnvVar{}
@@ -114,7 +118,9 @@ func (s *Settings) MutateContainerEnvFrom(obj *corev1.Container) error {
 			}
 			envVar.Name = source.Value
 			envVar.ValueFrom = valueFrom
-			obj.Env = append(obj.Env, envVar)
+
+			envVars = append(envVars, envVar)
+			// obj.Env = append(obj.Env, envVar)
 		}
 	}
 
@@ -127,7 +133,8 @@ func (s *Settings) MutateContainerEnvFrom(obj *corev1.Container) error {
 					},
 				},
 			}
-			obj.EnvFrom = append(obj.EnvFrom, envFrom)
+			// obj.EnvFrom = append(obj.EnvFrom, envFrom)
+			envFroms = append(envFroms, envFrom)
 		}
 		if len(source.Key) > 0 {
 			envVar := corev1.EnvVar{}
@@ -141,7 +148,9 @@ func (s *Settings) MutateContainerEnvFrom(obj *corev1.Container) error {
 			}
 			envVar.Name = source.Value
 			envVar.ValueFrom = valueFrom
-			obj.Env = append(obj.Env, envVar)
+
+			envVars = append(envVars, envVar)
+			// obj.Env = append(obj.Env, envVar)
 		}
 	}
 
@@ -150,8 +159,11 @@ func (s *Settings) MutateContainerEnvFrom(obj *corev1.Container) error {
 			Name:  k,
 			Value: v,
 		}
-		obj.Env = append(obj.Env, envVar)
+		envVars = append(envVars, envVar)
 	}
+
+	obj.EnvFrom = envFroms
+	obj.Env = envVars
 
 	return nil
 }
