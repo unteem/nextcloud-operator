@@ -74,10 +74,15 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	//	componentApp.MutateDeployment()
 	componentCron := cron.NewCron(app)
 
+	secretSyncer := componentApp.NewSecretSyncer(r)
 	objectSyncer := componentApp.NewDeploymentSyncer(r)
 	serviceSyncer := componentApp.NewServiceSyncer(r)
 	ingressSyncer := componentApp.NewIngressSyncer(r)
 	cronSyncer := componentCron.NewCronJobSyncer(r)
+
+	if err := syncer.Sync(context.TODO(), secretSyncer, r.Recorder); err != nil {
+		return ctrl.Result{}, err
+	}
 
 	if err := syncer.Sync(context.TODO(), objectSyncer, r.Recorder); err != nil {
 		return ctrl.Result{}, err

@@ -32,6 +32,7 @@ type App struct {
 	Deployment appsv1.Deployment
 	Service    corev1.Service
 	Ingress    networking.Ingress
+	Secret     corev1.Secret
 }
 
 func NewApp(nc *appsv1beta1.Nextcloud) *App {
@@ -39,13 +40,19 @@ func NewApp(nc *appsv1beta1.Nextcloud) *App {
 	app.Name = "app"
 	app.Common = common.NewCommon(nc)
 	app.Owner = nc
+
 	app.Service.Name = app.GetName()
 	app.Service.Namespace = app.Owner.Namespace
+
 	app.Ingress.SetName(app.GetName())
 	app.Ingress.SetNamespace(app.Owner.Namespace)
 
 	app.Deployment.SetName(app.GetName())
 	app.Deployment.SetNamespace(app.Owner.Namespace)
+
+	app.Secret.SetName(app.GetName())
+	app.Secret.SetNamespace(app.Owner.Namespace)
+
 	return app
 }
 
