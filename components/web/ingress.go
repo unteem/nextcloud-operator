@@ -16,6 +16,8 @@ limitations under the License.
 package web
 
 import (
+	"fmt"
+
 	"github.com/presslabs/controller-util/syncer"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -36,7 +38,7 @@ func (component *Component) MutateIngress() error {
 	component.Ingress.SetLabels(labels)
 
 	bk := networking.IngressBackend{
-		ServiceName: component.GetName(),
+		ServiceName: "test",
 		ServicePort: intstr.FromString("http"),
 	}
 
@@ -60,6 +62,7 @@ func (component *Component) MutateIngress() error {
 		})
 	}
 
+	fmt.Println(component.Ingress)
 	component.Ingress.Spec.Rules = rules
 
 	return nil

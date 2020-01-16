@@ -44,6 +44,9 @@ func CreateAndInit(common *common.Common) *Component {
 	component.Name = "web"
 	component.Owner = common.Owner
 
+	component.Runtime = &component.Owner.Spec.Web.Runtime
+	component.Settings = &component.Owner.Spec.Web.Settings
+
 	component.Service.Name = component.GetName()
 	component.Service.Namespace = component.Owner.Namespace
 

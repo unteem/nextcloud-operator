@@ -82,11 +82,11 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	secretSyncer := componentApp.NewSecretSyncer(r)
 	objectSyncer := componentApp.NewDeploymentSyncer(r)
 	serviceSyncer := componentApp.NewServiceSyncer(r)
-	ingressSyncer := componentApp.NewIngressSyncer(r)
 
 	cronSyncer := componentCron.NewCronJobSyncer(r)
 
 	webConfigMapSyncer := componentWeb.NewConfigMapSyncer(r)
+	ingressSyncer := componentWeb.NewIngressSyncer(r)
 
 	// jobSyncer := componentCLI.NewJobSyncer(r)
 
