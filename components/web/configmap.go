@@ -132,19 +132,16 @@ const conf = `
 }
 `
 
-func (component *Component) NewConfigMapSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("ConfigMap", component.Owner, &component.ConfigMap, r.GetClient(), r.GetScheme(), component.MutateConfigMap)
+func (c *Component) NewConfigMapSyncer(r interfaces.Reconcile) syncer.Interface {
+	return syncer.NewObjectSyncer("ConfigMap", c.Owner, &c.ConfigMap, r.GetClient(), r.GetScheme(), c.MutateConfigMap)
 }
 
-func (component *Component) MutateConfigMap() error {
-	labels := component.Labels("web")
-
-	component.ConfigMap.SetLabels(labels)
-	data, err := component.GenConfigMapData()
+func (c *Component) MutateConfigMap() error {
+	data, err := c.GenConfigMapData()
 	if err != nil {
 		return err
 	}
-	component.ConfigMap.Data = data
+	c.ConfigMap.Data = data
 
 	return nil
 }

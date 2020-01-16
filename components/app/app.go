@@ -23,9 +23,10 @@ import (
 	networking "k8s.io/api/networking/v1beta1"
 
 	common "git.indie.host/nextcloud-operator/components/common"
+	interfaces "git.indie.host/nextcloud-operator/interfaces"
 )
 
-type App struct {
+type Component struct {
 	Name string
 	*common.Common
 	Deployment appsv1.Deployment
@@ -34,25 +35,32 @@ type App struct {
 	Secret     corev1.Secret
 }
 
-func CreateAndInit(common *common.Common) *App {
-	app := &App{}
-	app.Name = "app"
-	app.Common = common
-	app.Service.Name = app.GetName()
-	app.Service.Namespace = app.Owner.Namespace
+func CreateAndInit(common *common.Common) *Component {
+	c := &Component{}
+	c.Name = "app"
+	c.Common = common
 
-	app.Ingress.SetName(app.GetName())
-	app.Ingress.SetNamespace(app.Owner.Namespace)
+	objects := c.GetObjects()
+	labels := c.Labels("app")
 
-	app.Deployment.SetName(app.GetName())
-	app.Deployment.SetNamespace(app.Owner.Namespace)
+	for _, o := range objects {
+		o.SetName(c.GetName())
+		o.SetNamespace(c.Owner.Namespace)
+		o.SetLabels(labels)
+	}
 
-	app.Secret.SetName(app.GetName())
-	app.Secret.SetNamespace(app.Owner.Namespace)
-
-	return app
+	return c
 }
 
-func (app *App) GetName() string {
-	return fmt.Sprintf("%s-%s", app.Owner.Name, app.Name)
+func (c *Component) GetName() string {
+	return fmt.Sprintf("%s-%s", c.Owner.Name, c.Name)
+}
+
+func (c *Component) GetObjects() []interfaces.Object {
+	return []interfaces.Object{
+		&c.Secret,
+		&c.Deployment,
+		&c.Service,
+		&c.Ingress,
+	}
 }

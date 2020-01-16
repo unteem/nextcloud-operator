@@ -25,22 +25,22 @@ import (
 	interfaces "git.indie.host/nextcloud-operator/interfaces"
 )
 
-func (app *App) NewDeploymentSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("Deployment", app.Owner, &app.Deployment, r.GetClient(), r.GetScheme(), app.MutateDeployment)
+func (c *Component) NewDeploymentSyncer(r interfaces.Reconcile) syncer.Interface {
+	return syncer.NewObjectSyncer("Deployment", c.Owner, &c.Deployment, r.GetClient(), r.GetScheme(), c.MutateDeployment)
 }
 
-func (app *App) MutateDeployment() error {
-	app.Settings.MutateDeployment(&app.Deployment)
-	app.Runtime.MutateDeployment(&app.Deployment)
+func (c *Component) MutateDeployment() error {
+	c.Settings.MutateDeployment(&c.Deployment)
+	c.Runtime.MutateDeployment(&c.Deployment)
 
-	labels := app.Labels("app")
+	labels := c.Labels("app")
 
-	app.Deployment.SetLabels(labels)
+	c.Deployment.SetLabels(labels)
 
-	app.Deployment.Spec.Template.ObjectMeta = app.Deployment.ObjectMeta
-	app.Deployment.Spec.Selector = metav1.SetAsLabelSelector(labels)
+	c.Deployment.Spec.Template.ObjectMeta = c.Deployment.ObjectMeta
+	c.Deployment.Spec.Selector = metav1.SetAsLabelSelector(labels)
 
-	fmt.Println(app.Deployment.Spec.Template.Spec.Containers[0])
+	fmt.Println(c.Deployment.Spec.Template.Spec.Containers[0])
 
 	return nil
 }

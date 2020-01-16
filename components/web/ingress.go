@@ -16,8 +16,6 @@ limitations under the License.
 package web
 
 import (
-	"fmt"
-
 	"github.com/presslabs/controller-util/syncer"
 
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -27,15 +25,12 @@ import (
 	interfaces "git.indie.host/nextcloud-operator/interfaces"
 )
 
-func (component *Component) NewIngressSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("Ingress", component.Owner, &component.Ingress, r.GetClient(), r.GetScheme(), component.MutateIngress)
+func (c *Component) NewIngressSyncer(r interfaces.Reconcile) syncer.Interface {
+	return syncer.NewObjectSyncer("Ingress", c.Owner, &c.Ingress, r.GetClient(), r.GetScheme(), c.MutateIngress)
 }
 
-func (component *Component) MutateIngress() error {
-	component.Runtime.MutateIngress(&component.Ingress)
-
-	labels := component.Labels("web")
-	component.Ingress.SetLabels(labels)
+func (c *Component) MutateIngress() error {
+	c.Runtime.MutateIngress(&c.Ingress)
 
 	bk := networking.IngressBackend{
 		ServiceName: "test",
@@ -51,7 +46,7 @@ func (component *Component) MutateIngress() error {
 
 	rules := []networking.IngressRule{}
 
-	for _, d := range component.Runtime.Hosts {
+	for _, d := range c.Runtime.Hosts {
 		rules = append(rules, networking.IngressRule{
 			Host: string(d),
 			IngressRuleValue: networking.IngressRuleValue{
@@ -62,8 +57,8 @@ func (component *Component) MutateIngress() error {
 		})
 	}
 
-	fmt.Println(component.Ingress)
-	component.Ingress.Spec.Rules = rules
+	//	fmt.Println(component.Ingress)
+	c.Ingress.Spec.Rules = rules
 
 	return nil
 }

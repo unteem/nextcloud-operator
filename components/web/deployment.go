@@ -32,9 +32,7 @@ func (component *Component) MutateDeployment() error {
 	// component.Settings.MutateDeployment(&component.Deployment)
 	component.Runtime.MutateDeployment(&component.Deployment)
 
-	labels := component.Labels("app")
-
-	component.Deployment.SetLabels(labels)
+	labels := component.Labels("web")
 
 	component.Deployment.Spec.Template.ObjectMeta = component.Deployment.ObjectMeta
 	component.Deployment.Spec.Selector = metav1.SetAsLabelSelector(labels)

@@ -34,30 +34,33 @@ type Component struct {
 }
 
 func CreateAndInit(common *common.Common) *Component {
-	component := &Component{}
-	component.Name = "cli"
-	component.Common = common
+	c := &Component{}
+	c.Name = "cli"
+	c.Common = common
 
-	component.Job.SetName(component.GetName())
-	component.Job.SetNamespace(component.Owner.Namespace)
-	return component
+	labels := c.Labels("cli")
+
+	objects := c.GetObjects()
+	for _, o := range objects {
+		o.SetName(c.GetName())
+		o.SetNamespace(c.Owner.Namespace)
+		o.SetLabels(labels)
+	}
+	return c
 }
 
-func (component *Component) NewJobSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("Job", component.Owner, &component.Job, r.GetClient(), r.GetScheme(), component.MutateJob)
+func (c *Component) NewJobSyncer(r interfaces.Reconcile) syncer.Interface {
+	return syncer.NewObjectSyncer("Job", c.Owner, &c.Job, r.GetClient(), r.GetScheme(), c.MutateJob)
 }
 
-func (component *Component) MutateJob() error {
-	component.Settings.MutatePod(&component.Job.Spec.Template)
-	component.Runtime.MutatePod(&component.Job.Spec.Template)
-
-	labels := component.Labels("cli")
-	component.Job.SetLabels(labels)
+func (c *Component) MutateJob() error {
+	c.Settings.MutatePod(&c.Job.Spec.Template)
+	c.Runtime.MutatePod(&c.Job.Spec.Template)
 
 	//	_ = mergo.Merge(&component.Job.Spec.Template.ObjectMeta, &component.Job.ObjectMeta)
 	// component.Job.Spec.Template.ObjectMeta = component.Job.ObjectMeta
 
-	component.Job.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyNever
+	c.Job.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyNever
 
 	// args := []string{"/usr/local/bin/php", "/var/www/html/cron.php"}
 	// component.Job.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Args = args
@@ -65,6 +68,12 @@ func (component *Component) MutateJob() error {
 	return nil
 }
 
-func (component *Component) GetName() string {
-	return fmt.Sprintf("%s-%s", component.Owner.Name, component.Name)
+func (c *Component) GetName() string {
+	return fmt.Sprintf("%s-%s", c.Owner.Name, c.Name)
+}
+
+func (c *Component) GetObjects() []interfaces.Object {
+	return []interfaces.Object{
+		&c.Job,
+	}
 }

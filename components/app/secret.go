@@ -32,24 +32,21 @@ var (
 	}
 )
 
-func (app *App) NewSecretSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("Secret", app.Owner, &app.Secret, r.GetClient(), r.GetScheme(), app.MutateSecret)
+func (c *Component) NewSecretSyncer(r interfaces.Reconcile) syncer.Interface {
+	return syncer.NewObjectSyncer("Secret", c.Owner, &c.Secret, r.GetClient(), r.GetScheme(), c.MutateSecret)
 }
 
-func (app *App) MutateSecret() error {
-	labels := app.Labels("app")
-
-	app.Secret.SetLabels(labels)
-	data, err := app.GenSecretData()
+func (c *Component) MutateSecret() error {
+	data, err := c.GenSecretData()
 	if err != nil {
 		return err
 	}
-	app.Secret.Data = data
+	c.Secret.Data = data
 
 	return nil
 }
 
-func (app *App) GenSecretData() (map[string][]byte, error) {
+func (c *Component) GenSecretData() (map[string][]byte, error) {
 	data := make(map[string][]byte)
 
 	for name, size := range generatedSalts {

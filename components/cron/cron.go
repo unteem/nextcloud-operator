@@ -27,43 +27,55 @@ import (
 	interfaces "git.indie.host/nextcloud-operator/interfaces"
 )
 
-type Cron struct {
+type Component struct {
 	Name string
 	*common.Common
 	CronJob batchv1beta1.CronJob
 }
 
-func CreateAndInit(common *common.Common) *Cron {
-	cron := &Cron{}
-	cron.Name = "cron"
-	cron.Common = common
-	cron.CronJob.SetName(cron.GetName())
-	cron.CronJob.SetNamespace(cron.Owner.Namespace)
-	return cron
+func CreateAndInit(common *common.Common) *Component {
+	c := &Component{}
+	c.Name = "cron"
+	c.Common = common
+
+	labels := c.Labels("cronjob")
+	c.CronJob.SetLabels(labels)
+
+	objects := c.GetObjects()
+	for _, o := range objects {
+		o.SetName(c.GetName())
+		o.SetNamespace(c.Owner.Namespace)
+		o.SetLabels(labels)
+	}
+
+	return c
 }
 
-func (cron *Cron) NewCronJobSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("CronJob", cron.Owner, &cron.CronJob, r.GetClient(), r.GetScheme(), cron.MutateCronJob)
+func (c *Component) NewCronJobSyncer(r interfaces.Reconcile) syncer.Interface {
+	return syncer.NewObjectSyncer("CronJob", c.Owner, &c.CronJob, r.GetClient(), r.GetScheme(), c.MutateCronJob)
 }
 
-func (cron *Cron) MutateCronJob() error {
-	cron.Settings.MutatePod(&cron.CronJob.Spec.JobTemplate.Spec.Template)
-	cron.Runtime.MutatePod(&cron.CronJob.Spec.JobTemplate.Spec.Template)
+func (c *Component) MutateCronJob() error {
+	c.Settings.MutatePod(&c.CronJob.Spec.JobTemplate.Spec.Template)
+	c.Runtime.MutatePod(&c.CronJob.Spec.JobTemplate.Spec.Template)
 
-	labels := cron.Labels("cronjob")
-	cron.CronJob.SetLabels(labels)
-
-	cron.CronJob.Spec.Schedule = "*/15 * * * *"
-	cron.CronJob.Spec.JobTemplate.ObjectMeta = cron.CronJob.ObjectMeta
-	cron.CronJob.Spec.JobTemplate.Spec.Template.ObjectMeta = cron.CronJob.ObjectMeta
-	cron.CronJob.Spec.JobTemplate.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyNever
+	c.CronJob.Spec.Schedule = "*/15 * * * *"
+	c.CronJob.Spec.JobTemplate.ObjectMeta = c.CronJob.ObjectMeta
+	c.CronJob.Spec.JobTemplate.Spec.Template.ObjectMeta = c.CronJob.ObjectMeta
+	c.CronJob.Spec.JobTemplate.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyNever
 
 	args := []string{"/usr/local/bin/php", "/var/www/html/cron.php"}
-	cron.CronJob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Args = args
+	c.CronJob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Args = args
 
 	return nil
 }
 
-func (cron *Cron) GetName() string {
-	return fmt.Sprintf("%s-%s", cron.Owner.Name, cron.Name)
+func (c *Component) GetName() string {
+	return fmt.Sprintf("%s-%s", c.Owner.Name, c.Name)
+}
+
+func (c *Component) GetObjects() []interfaces.Object {
+	return []interfaces.Object{
+		&c.CronJob,
+	}
 }

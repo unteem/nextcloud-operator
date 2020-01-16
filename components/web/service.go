@@ -21,16 +21,16 @@ import (
 	interfaces "git.indie.host/nextcloud-operator/interfaces"
 )
 
-func (component *Component) NewServiceSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("Service", component.Owner, &component.Service, r.GetClient(), r.GetScheme(), component.MutateService)
+func (c *Component) NewServiceSyncer(r interfaces.Reconcile) syncer.Interface {
+	return syncer.NewObjectSyncer("Service", c.Owner, &c.Service, r.GetClient(), r.GetScheme(), c.MutateService)
 }
 
-func (component *Component) MutateService() error {
-	labels := component.Labels("web")
+func (c *Component) MutateService() error {
+	labels := c.Labels("web")
 
-	component.Runtime.MutateService(&component.Service)
-	component.Service.SetLabels(labels)
-	component.Service.Spec.Selector = labels
+	c.Runtime.MutateService(&c.Service)
+
+	c.Service.Spec.Selector = labels
 
 	return nil
 }

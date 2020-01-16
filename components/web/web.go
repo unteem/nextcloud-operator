@@ -24,6 +24,7 @@ import (
 
 	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
 	common "git.indie.host/nextcloud-operator/components/common"
+	interfaces "git.indie.host/nextcloud-operator/interfaces"
 
 	"k8s.io/apimachinery/pkg/labels"
 )
@@ -40,34 +41,28 @@ type Component struct {
 }
 
 func CreateAndInit(common *common.Common) *Component {
-	component := &Component{}
-	component.Name = "web"
-	component.Owner = common.Owner
+	c := &Component{}
+	c.Name = "web"
+	c.Owner = common.Owner
 
-	component.Runtime = &component.Owner.Spec.Web.Runtime
-	component.Settings = &component.Owner.Spec.Web.Settings
+	c.Runtime = &c.Owner.Spec.Web.Runtime
+	c.Settings = &c.Owner.Spec.Web.Settings
+	c.SetDefaults()
 
-	component.Service.Name = component.GetName()
-	component.Service.Namespace = component.Owner.Namespace
+	labels := c.Labels("web")
 
-	component.Ingress.SetName(component.GetName())
-	component.Ingress.SetNamespace(component.Owner.Namespace)
+	objects := c.GetObjects()
+	for _, o := range objects {
+		o.SetName(c.GetName())
+		o.SetNamespace(c.Owner.Namespace)
+		o.SetLabels(labels)
+	}
 
-	component.Deployment.SetName(component.GetName())
-	component.Deployment.SetNamespace(component.Owner.Namespace)
-
-	component.ConfigMap.SetName(component.GetName())
-	component.ConfigMap.SetNamespace(component.Owner.Namespace)
-
-	return component
+	return c
 }
 
-func (component *Component) GetName() string {
-	return fmt.Sprintf("%s-%s", component.Owner.Name, component.Name)
-}
-
-func (component *Component) SetDefaults() {
-	// if component.Settings
+func (c *Component) GetName() string {
+	return fmt.Sprintf("%s-%s", c.Owner.Name, c.Name)
 }
 
 func (c *Component) Labels(component string) labels.Set {
@@ -86,4 +81,32 @@ func (c *Component) Labels(component string) labels.Set {
 	}
 
 	return labels
+}
+
+func (c *Component) GetObjects() []interfaces.Object {
+	return []interfaces.Object{
+		&c.ConfigMap,
+		&c.Deployment,
+		&c.Service,
+		&c.Ingress,
+	}
+}
+
+func (c *Component) SetDefaults() {
+	if len(c.Runtime.Image) == 0 {
+		c.Runtime.Image = "indiehosters/nextcloud-web"
+	}
+	if len(c.Runtime.ServiceType) == 0 {
+		c.Runtime.ServiceType = "ClusterIP"
+	}
+	if c.Runtime.Ports == nil {
+		ports := []corev1.ContainerPort{
+			{
+				Name:          "http",
+				ContainerPort: int32(80),
+				Protocol:      "TCP",
+			},
+		}
+		c.Runtime.Ports = ports
+	}
 }
