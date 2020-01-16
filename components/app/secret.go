@@ -37,25 +37,24 @@ func (c *Component) NewSecretSyncer(r interfaces.Reconcile) syncer.Interface {
 }
 
 func (c *Component) MutateSecret() error {
-	data, err := c.GenSecretData()
-	if err != nil {
-		return err
+	//	err := c.MutateSecretData(c.Secret.Data)
+	//	if err != nil {
+	//		return err
+	//	}
+
+	if len(c.Secret.Data) == 0 {
+		c.Secret.Data = make(map[string][]byte)
 	}
-	c.Secret.Data = data
-
-	return nil
-}
-
-func (c *Component) GenSecretData() (map[string][]byte, error) {
-	data := make(map[string][]byte)
 
 	for name, size := range generatedSalts {
-		random, err := rand.AlphaNumericString(size)
-		if err != nil {
-			return data, err
+		if len(c.Secret.Data[name]) == 0 {
+			random, err := rand.AlphaNumericString(size)
+			if err != nil {
+				return err
+			}
+			c.Secret.Data[name] = []byte(random)
 		}
-		data[name] = []byte(random)
 	}
 
-	return data, nil
+	return nil
 }
