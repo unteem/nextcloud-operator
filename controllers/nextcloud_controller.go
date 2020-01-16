@@ -30,6 +30,7 @@ import (
 
 	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
 	application "git.indie.host/nextcloud-operator/components/app"
+	"git.indie.host/nextcloud-operator/components/cli"
 	"git.indie.host/nextcloud-operator/components/common"
 	cron "git.indie.host/nextcloud-operator/components/cron"
 	"git.indie.host/nextcloud-operator/components/web"
@@ -87,7 +88,7 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	componentApp := application.CreateAndInit(common)
 	componentCron := cron.CreateAndInit(common)
 	componentWeb := web.CreateAndInit(common)
-	// 	componentCLI := cli.CreateAndInit(common)
+	componentCLI := cli.CreateAndInit(common)
 
 	appSyncers := []syncer.Interface{
 		componentApp.NewSecretSyncer(r),
@@ -99,10 +100,6 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		componentCron.NewCronJobSyncer(r),
 	}
 
-	jobSyncers := []syncer.Interface{
-		// jobSyncer := componentCLI.NewJobSyncer(r)
-	}
-
 	webSyncers := []syncer.Interface{
 		componentWeb.NewConfigMapSyncer(r),
 		componentWeb.NewDeploymentSyncer(r),
@@ -112,7 +109,15 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	err = r.sync(appSyncers)
 	err = r.sync(cronSyncers)
-	err = r.sync(jobSyncers)
+
+	if phase == appsv1beta1.PhaseInstalling || phase == appsv1beta1.PhaseRunning {
+		jobSyncers := []syncer.Interface{
+			componentCLI.NewJobSyncer(r),
+		}
+
+		err = r.sync(jobSyncers)
+	}
+
 	err = r.sync(webSyncers)
 	if err != nil {
 		return ctrl.Result{}, err
