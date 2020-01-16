@@ -39,7 +39,6 @@ func (app *App) NewSecretSyncer(r interfaces.Reconcile) syncer.Interface {
 func (app *App) MutateSecret() error {
 	labels := app.Labels("app")
 
-	app.Runtime.MutateService(&app.Service)
 	app.Secret.SetLabels(labels)
 	data, err := app.GenSecretData()
 	if err != nil {

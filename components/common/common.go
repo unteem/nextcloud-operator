@@ -61,6 +61,7 @@ func CreateAndInit(app *appsv1beta1.Nextcloud) *Common {
 			// do something
 		}
 	}
+
 	return &Common{
 		Owner:    app,
 		Settings: settings,
