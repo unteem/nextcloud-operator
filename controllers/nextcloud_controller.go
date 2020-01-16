@@ -142,9 +142,9 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	oldStatus := app.Status.DeepCopy()
 	if oldStatus != &app.Status {
-		//	if err := r.Status().Update(ctx, app); err != nil {
-		//		return ctrl.Result{}, err
-		//	}
+		if err := r.Status().Update(ctx, app); err != nil {
+			return ctrl.Result{}, err
+		}
 	}
 
 	return ctrl.Result{}, nil

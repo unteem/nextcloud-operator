@@ -135,7 +135,7 @@ const (
 )
 
 // +kubebuilder:object:root=true
-
+// +kubebuilder:subresource:status
 // Nextcloud is the Schema for the nextclouds API
 type Nextcloud struct {
 	metav1.TypeMeta   `json:",inline"`
