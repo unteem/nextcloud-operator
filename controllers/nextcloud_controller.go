@@ -88,6 +88,7 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	webConfigMapSyncer := componentWeb.NewConfigMapSyncer(r)
 	webDeploymentSyncer := componentWeb.NewDeploymentSyncer(r)
 	ingressSyncer := componentWeb.NewIngressSyncer(r)
+	webServiceSyncer := componentWeb.NewServiceSyncer(r)
 
 	// jobSyncer := componentCLI.NewJobSyncer(r)
 
@@ -119,6 +120,10 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 
 	if err := syncer.Sync(context.TODO(), webDeploymentSyncer, r.Recorder); err != nil {
+		return ctrl.Result{}, err
+	}
+
+	if err := syncer.Sync(context.TODO(), webServiceSyncer, r.Recorder); err != nil {
 		return ctrl.Result{}, err
 	}
 
