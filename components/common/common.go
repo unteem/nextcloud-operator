@@ -28,7 +28,7 @@ type Common struct {
 	Runtime  *appsv1beta1.Runtime
 }
 
-func NewCommon(app *appsv1beta1.Nextcloud) *Common {
+func CreateAndInit(app *appsv1beta1.Nextcloud) *Common {
 	// app.SetDefaults()
 
 	runtime := &app.Spec.App.Runtime
@@ -62,6 +62,7 @@ func NewCommon(app *appsv1beta1.Nextcloud) *Common {
 		}
 	}
 	return &Common{
+		Owner:    app,
 		Settings: settings,
 		Runtime:  runtime,
 	}

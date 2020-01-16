@@ -20,7 +20,6 @@ import (
 
 	"github.com/presslabs/controller-util/syncer"
 
-	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
 	batchv1beta1 "k8s.io/api/batch/v1beta1"
 	corev1 "k8s.io/api/core/v1"
 
@@ -34,11 +33,10 @@ type Cron struct {
 	CronJob batchv1beta1.CronJob
 }
 
-func NewCron(nc *appsv1beta1.Nextcloud) *Cron {
+func CreateAndInit(common *common.Common) *Cron {
 	cron := &Cron{}
 	cron.Name = "cron"
-	cron.Common = common.NewCommon(nc)
-	cron.Owner = nc
+	cron.Common = common
 	cron.CronJob.SetName(cron.GetName())
 	cron.CronJob.SetNamespace(cron.Owner.Namespace)
 	return cron

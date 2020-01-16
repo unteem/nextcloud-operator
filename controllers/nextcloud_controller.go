@@ -30,6 +30,7 @@ import (
 	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
 	application "git.indie.host/nextcloud-operator/components/app"
 	cli "git.indie.host/nextcloud-operator/components/cli"
+	"git.indie.host/nextcloud-operator/components/common"
 	cron "git.indie.host/nextcloud-operator/components/cron"
 )
 
@@ -71,9 +72,11 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	}
 	// fmt.Println(app)
 
-	componentApp := application.NewApp(app)
-	componentCron := cron.NewCron(app)
-	componentCLI := cli.CreateAndInit(app)
+	common := common.CreateAndInit(app)
+
+	componentApp := application.CreateAndInit(common)
+	componentCron := cron.CreateAndInit(common)
+	componentCLI := cli.CreateAndInit(common)
 
 	secretSyncer := componentApp.NewSecretSyncer(r)
 	objectSyncer := componentApp.NewDeploymentSyncer(r)

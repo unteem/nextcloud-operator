@@ -20,7 +20,6 @@ import (
 
 	"github.com/presslabs/controller-util/syncer"
 
-	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 
@@ -34,11 +33,10 @@ type Component struct {
 	Job batchv1.Job
 }
 
-func CreateAndInit(nc *appsv1beta1.Nextcloud) *Component {
+func CreateAndInit(common *common.Common) *Component {
 	component := &Component{}
 	component.Name = "cli"
-	component.Common = common.NewCommon(nc)
-	component.Owner = nc
+	component.Common = common
 
 	component.Job.SetName(component.GetName())
 	component.Job.SetNamespace(component.Owner.Namespace)

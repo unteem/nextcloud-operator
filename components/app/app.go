@@ -22,7 +22,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
 
-	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
 	common "git.indie.host/nextcloud-operator/components/common"
 )
 
@@ -35,12 +34,10 @@ type App struct {
 	Secret     corev1.Secret
 }
 
-func NewApp(nc *appsv1beta1.Nextcloud) *App {
+func CreateAndInit(common *common.Common) *App {
 	app := &App{}
 	app.Name = "app"
-	app.Common = common.NewCommon(nc)
-	app.Owner = nc
-
+	app.Common = common
 	app.Service.Name = app.GetName()
 	app.Service.Namespace = app.Owner.Namespace
 
