@@ -54,7 +54,9 @@ func (component *Component) MutateJob() error {
 	labels := component.Labels("cli")
 	component.Job.SetLabels(labels)
 
-	component.Job.Spec.Template.ObjectMeta = component.Job.ObjectMeta
+	//	_ = mergo.Merge(&component.Job.Spec.Template.ObjectMeta, &component.Job.ObjectMeta)
+	// component.Job.Spec.Template.ObjectMeta = component.Job.ObjectMeta
+
 	component.Job.Spec.Template.Spec.RestartPolicy = corev1.RestartPolicyNever
 
 	// args := []string{"/usr/local/bin/php", "/var/www/html/cron.php"}
