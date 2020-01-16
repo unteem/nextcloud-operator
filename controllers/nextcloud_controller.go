@@ -89,51 +89,32 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	componentWeb := web.CreateAndInit(common)
 	// 	componentCLI := cli.CreateAndInit(common)
 
-	secretSyncer := componentApp.NewSecretSyncer(r)
-	objectSyncer := componentApp.NewDeploymentSyncer(r)
-	serviceSyncer := componentApp.NewServiceSyncer(r)
-
-	cronSyncer := componentCron.NewCronJobSyncer(r)
-
-	webConfigMapSyncer := componentWeb.NewConfigMapSyncer(r)
-	webDeploymentSyncer := componentWeb.NewDeploymentSyncer(r)
-	ingressSyncer := componentWeb.NewIngressSyncer(r)
-	webServiceSyncer := componentWeb.NewServiceSyncer(r)
-
-	// jobSyncer := componentCLI.NewJobSyncer(r)
-
-	if err := syncer.Sync(context.TODO(), secretSyncer, r.Recorder); err != nil {
-		return ctrl.Result{}, err
+	appSyncers := []syncer.Interface{
+		componentApp.NewSecretSyncer(r),
+		componentApp.NewDeploymentSyncer(r),
+		componentApp.NewServiceSyncer(r),
 	}
 
-	if err := syncer.Sync(context.TODO(), objectSyncer, r.Recorder); err != nil {
-		return ctrl.Result{}, err
+	cronSyncers := []syncer.Interface{
+		componentCron.NewCronJobSyncer(r),
 	}
 
-	if err := syncer.Sync(context.TODO(), serviceSyncer, r.Recorder); err != nil {
-		return ctrl.Result{}, err
+	jobSyncers := []syncer.Interface{
+		// jobSyncer := componentCLI.NewJobSyncer(r)
 	}
 
-	if err := syncer.Sync(context.TODO(), ingressSyncer, r.Recorder); err != nil {
-		return ctrl.Result{}, err
+	webSyncers := []syncer.Interface{
+		componentWeb.NewConfigMapSyncer(r),
+		componentWeb.NewDeploymentSyncer(r),
+		componentWeb.NewIngressSyncer(r),
+		componentWeb.NewServiceSyncer(r),
 	}
 
-	if err := syncer.Sync(context.TODO(), cronSyncer, r.Recorder); err != nil {
-		return ctrl.Result{}, err
-	}
-	//	if err := syncer.Sync(context.TODO(), jobSyncer, r.Recorder); err != nil {
-	//		return ctrl.Result{}, err
-	//	}
-
-	if err := syncer.Sync(context.TODO(), webConfigMapSyncer, r.Recorder); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if err := syncer.Sync(context.TODO(), webDeploymentSyncer, r.Recorder); err != nil {
-		return ctrl.Result{}, err
-	}
-
-	if err := syncer.Sync(context.TODO(), webServiceSyncer, r.Recorder); err != nil {
+	err = r.sync(appSyncers)
+	err = r.sync(cronSyncers)
+	err = r.sync(jobSyncers)
+	err = r.sync(webSyncers)
+	if err != nil {
 		return ctrl.Result{}, err
 	}
 
@@ -154,4 +135,13 @@ func (r *NextcloudReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&appsv1beta1.Nextcloud{}).
 		Complete(r)
+}
+
+func (r *NextcloudReconciler) sync(syncers []syncer.Interface) error {
+	for _, s := range syncers {
+		if err := syncer.Sync(context.TODO(), s, r.Recorder); err != nil {
+			return err
+		}
+	}
+	return nil
 }

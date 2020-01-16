@@ -35,8 +35,6 @@ func (c *Component) MutateDeployment() error {
 
 	labels := c.Labels("app")
 
-	c.Deployment.SetLabels(labels)
-
 	c.Deployment.Spec.Template.ObjectMeta = c.Deployment.ObjectMeta
 	c.Deployment.Spec.Selector = metav1.SetAsLabelSelector(labels)
 
