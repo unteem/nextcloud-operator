@@ -37,11 +37,6 @@ func (c *Component) NewSecretSyncer(r interfaces.Reconcile) syncer.Interface {
 }
 
 func (c *Component) MutateSecret() error {
-	//	err := c.MutateSecretData(c.Secret.Data)
-	//	if err != nil {
-	//		return err
-	//	}
-
 	if len(c.Secret.Data) == 0 {
 		c.Secret.Data = make(map[string][]byte)
 	}
