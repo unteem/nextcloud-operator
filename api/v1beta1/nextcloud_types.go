@@ -119,6 +119,20 @@ type Runtime struct {
 	Strategy appsv1.DeploymentStrategy `json:"strategy,omitempty" patchStrategy:"retainKeys" protobuf:"bytes,4,opt,name=strategy"`
 }
 
+// Phase is the current status of a App as a whole.
+type Phase string
+
+const (
+	PhaseNone       Phase = ""
+	PhasePlanning   Phase = "Planning"
+	PhaseRunning    Phase = "Running"
+	PhaseCreating   Phase = "Creating"
+	PhaseInstalling Phase = "Installing"
+	PhaseUpgrading  Phase = "Upgrading"
+	PhaseComplete   Phase = "Complete"
+	PhaseFailed     Phase = "Failed"
+)
+
 // +kubebuilder:object:root=true
 
 // Nextcloud is the Schema for the nextclouds API
