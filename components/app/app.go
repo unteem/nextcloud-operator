@@ -16,6 +16,8 @@ limitations under the License.
 package application
 
 import (
+	"fmt"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
@@ -25,6 +27,7 @@ import (
 )
 
 type App struct {
+	Name string
 	*common.Common
 	Deployment appsv1.Deployment
 	Service    corev1.Service
@@ -33,14 +36,19 @@ type App struct {
 
 func NewApp(nc *appsv1beta1.Nextcloud) *App {
 	app := &App{}
+	app.Name = "app"
 	app.Common = common.NewCommon(nc)
 	app.Owner = nc
-	app.Service.Name = "test"
+	app.Service.Name = app.GetName()
 	app.Service.Namespace = app.Owner.Namespace
-	app.Ingress.SetName("test")
+	app.Ingress.SetName(app.GetName())
 	app.Ingress.SetNamespace(app.Owner.Namespace)
 
-	app.Deployment.SetName("test")
+	app.Deployment.SetName(app.GetName())
 	app.Deployment.SetNamespace(app.Owner.Namespace)
 	return app
+}
+
+func (app *App) GetName() string {
+	return fmt.Sprintf("%s-%s", app.Owner.Name, app.Name)
 }

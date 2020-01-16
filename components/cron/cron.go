@@ -16,6 +16,8 @@ limitations under the License.
 package cron
 
 import (
+	"fmt"
+
 	"github.com/presslabs/controller-util/syncer"
 
 	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
@@ -27,15 +29,17 @@ import (
 )
 
 type Cron struct {
+	Name string
 	*common.Common
 	CronJob batchv1beta1.CronJob
 }
 
 func NewCron(nc *appsv1beta1.Nextcloud) *Cron {
 	cron := &Cron{}
+	cron.Name = "cron"
 	cron.Common = common.NewCommon(nc)
 	cron.Owner = nc
-	cron.CronJob.SetName("test")
+	cron.CronJob.SetName(cron.GetName())
 	cron.CronJob.SetNamespace(cron.Owner.Namespace)
 	return cron
 }
@@ -60,4 +64,8 @@ func (cron *Cron) MutateCronJob() error {
 	cron.CronJob.Spec.JobTemplate.Spec.Template.Spec.Containers[0].Args = args
 
 	return nil
+}
+
+func (cron *Cron) GetName() string {
+	return fmt.Sprintf("%s-%s", cron.Owner.Name, cron.Name)
 }
