@@ -19,6 +19,8 @@ import (
 	runtime "k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 // Reconcile is the interface for Reconcile object structs . This
@@ -44,4 +46,18 @@ type Reconcile interface {
 	GetRecorder() record.EventRecorder
 	// Getter function for reconcile Scheme
 	//GetLogger() logr.Logger
+}
+
+// Object is the interface which all Kubernetes objects
+// implements. This interface can be used to pass around any
+// Kubernetes Object. This helps keep the functions more generic and
+// less tied to the specific Objects.
+type Object interface {
+	// The object needs to implement Meta Object interface from API
+	// machinery. This interface is used for various Client operations
+	// on Kubernetes objects.
+	metav1.Object
+	// The object needs to implement Runtime Object interface from API
+	// machinery.
+	runtime.Object
 }
