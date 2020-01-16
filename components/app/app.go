@@ -16,20 +16,12 @@ limitations under the License.
 package application
 
 import (
-	"fmt"
-
-	"github.com/presslabs/controller-util/syncer"
-
-	"k8s.io/apimachinery/pkg/util/intstr"
-
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	networking "k8s.io/api/networking/v1beta1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
 	common "git.indie.host/nextcloud-operator/components/common"
-	interfaces "git.indie.host/nextcloud-operator/interfaces"
 )
 
 type App struct {
@@ -51,77 +43,4 @@ func NewApp(nc *appsv1beta1.Nextcloud) *App {
 	app.Deployment.SetName("test")
 	app.Deployment.SetNamespace(app.Owner.Namespace)
 	return app
-}
-
-func (app *App) NewDeploymentSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("Deployment", app.Owner, &app.Deployment, r.GetClient(), r.GetScheme(), app.MutateDeployment)
-}
-
-func (app *App) NewServiceSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("Service", app.Owner, &app.Service, r.GetClient(), r.GetScheme(), app.MutateService)
-}
-
-func (app *App) NewIngressSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("Ingress", app.Owner, &app.Ingress, r.GetClient(), r.GetScheme(), app.MutateIngress)
-}
-
-func (app *App) MutateService() error {
-	labels := app.Labels("app")
-
-	app.Runtime.MutateService(&app.Service)
-	app.Service.SetLabels(labels)
-	app.Service.Spec.Selector = labels
-
-	return nil
-}
-
-func (app *App) MutateDeployment() error {
-	app.Settings.MutateDeployment(&app.Deployment)
-	app.Runtime.MutateDeployment(&app.Deployment)
-
-	labels := app.Labels("app")
-
-	app.Deployment.SetLabels(labels)
-
-	app.Deployment.Spec.Template.ObjectMeta = app.Deployment.ObjectMeta
-	app.Deployment.Spec.Selector = metav1.SetAsLabelSelector(labels)
-
-	return nil
-}
-
-func (app *App) MutateIngress() error {
-	app.Runtime.MutateIngress(&app.Ingress)
-
-	labels := app.Labels("web")
-	app.Ingress.SetLabels(labels)
-
-	bk := networking.IngressBackend{
-		ServiceName: "test",
-		ServicePort: intstr.FromString("http"),
-	}
-
-	bkpaths := []networking.HTTPIngressPath{
-		{
-			Path:    "/",
-			Backend: bk,
-		},
-	}
-
-	rules := []networking.IngressRule{}
-
-	for _, d := range app.Runtime.Hosts {
-		rules = append(rules, networking.IngressRule{
-			Host: string(d),
-			IngressRuleValue: networking.IngressRuleValue{
-				HTTP: &networking.HTTPIngressRuleValue{
-					Paths: bkpaths,
-				},
-			},
-		})
-	}
-
-	fmt.Println(app.Ingress)
-	app.Ingress.Spec.Rules = rules
-
-	return nil
 }
