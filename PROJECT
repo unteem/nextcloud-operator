@@ -3,5 +3,5 @@ repo: git.indie.host/nextcloud-operator
 resources:
 - group: apps
   kind: Nextcloud
-  version: v1beta1
+  version: v1alpha1
 version: "2"

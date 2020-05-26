@@ -19,8 +19,8 @@ import (
 	"flag"
 	"os"
 
-	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
-	"git.indie.host/nextcloud-operator/controllers"
+	appsv1alpha1 "git.indie.host/operators/nextcloud-operator/api/v1alpha1"
+	"git.indie.host/operators/nextcloud-operator/controllers"
 	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
@@ -38,13 +38,13 @@ var (
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 
-	_ = appsv1beta1.AddToScheme(scheme)
+	_ = appsv1alpha1.AddToScheme(scheme)
 	_ = networking.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 	//	_ = appsv1.AddToScheme(scheme)
 	//	_ = corev1.AddToScheme(scheme)
-	//	_ = extv1beta1.AddToScheme(scheme)
-	//	_ = batchv1beta1.AddToScheme(scheme)
+	//	_ = extv1alpha1.AddToScheme(scheme)
+	//	_ = batchv1alpha1.AddToScheme(scheme)
 	//	_ = batchv1.AddToScheme(scheme)
 	//	_ = monitoringv1.AddToScheme(scheme)
 

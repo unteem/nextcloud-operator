@@ -15,15 +15,6 @@ limitations under the License.
 
 package web
 
-import (
-	"bytes"
-	"html/template"
-
-	"github.com/presslabs/controller-util/syncer"
-
-	interfaces "git.indie.host/nextcloud-operator/interfaces"
-)
-
 const conf = `
 	user www-data;
 	events {
@@ -131,37 +122,3 @@ const conf = `
 	}
 }
 `
-
-func (c *Component) NewConfigMapSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("ConfigMap", c.Owner, &c.ConfigMap, r.GetClient(), r.GetScheme(), c.MutateConfigMap)
-}
-
-func (c *Component) MutateConfigMap() error {
-	data, err := c.GenConfigMapData()
-	if err != nil {
-		return err
-	}
-	c.ConfigMap.Data = data
-
-	return nil
-}
-
-// GenAppConfigMapData func generates data for the web configmap that contains the nginx.conf
-func (c *Component) GenConfigMapData() (map[string]string, error) {
-	var cm map[string]string
-	tmpl, err := template.New("test").Parse(conf)
-	if err != nil {
-		return nil, err
-	}
-	var tpl bytes.Buffer
-	err = tmpl.Execute(&tpl, c.Owner)
-	if err != nil {
-		return nil, err
-	}
-
-	cm = map[string]string{
-		"nginx.conf": tpl.String(),
-	}
-
-	return cm, nil
-}

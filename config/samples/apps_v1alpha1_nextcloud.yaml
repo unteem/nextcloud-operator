@@ -1,0 +1,14 @@
+apiVersion: apps.libre.sh/v1alpha1
+kind: Nextcloud
+metadata:
+  name: nextcloud-sample
+spec:
+  # Add fields here
+  version: "16"
+  settings:
+    database:
+      username:
+        value: "nextcloud"
+  #  redis:
+  #  smtp:
+  #  objectStore:

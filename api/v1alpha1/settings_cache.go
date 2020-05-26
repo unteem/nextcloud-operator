@@ -13,23 +13,26 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package application
+package v1alpha1
 
 import (
-	"github.com/presslabs/controller-util/syncer"
-
-	interfaces "git.indie.host/nextcloud-operator/interfaces"
+	"k8s.libre.sh/application/settings/parameters"
 )
 
-func (c *Component) NewServiceSyncer(r interfaces.Reconcile) syncer.Interface {
-	return syncer.NewObjectSyncer("Service", c.Owner, &c.Service, r.GetClient(), r.GetScheme(), c.MutateService)
+type Redis struct {
+	Username parameters.Parameter `json:"username,omitempty" env:"REDIS_USERNAME"`
+	Password parameters.Parameter `json:"password,omitempty" env:"REDIS_PASSWORD"`
+	Host     parameters.Parameter `json:"host,omitempty" env:"REDIS_HOST"`
+	Port     parameters.Parameter `json:"port,omitempty" env:"REDIS_HOST_PORT"`
 }
 
-func (c *Component) MutateService() error {
-	labels := c.Labels("app")
+type RedisSecrets struct {
+}
 
-	c.Runtime.MutateService(&c.Service)
-	c.Service.Spec.Selector = labels
+func (d *Redis) SetDefaults() {
 
-	return nil
+}
+
+func (s *Redis) GetParameters() *parameters.Parameters {
+	return &parameters.Parameters{}
 }
