@@ -17,24 +17,19 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-logr/logr"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/record"
+	"k8s.libre.sh/application"
+	"k8s.libre.sh/objects"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 
 	"github.com/presslabs/controller-util/syncer"
 
-	appsv1beta1 "git.indie.host/nextcloud-operator/api/v1beta1"
-	application "git.indie.host/nextcloud-operator/components/app"
-	"git.indie.host/nextcloud-operator/components/cli"
-	"git.indie.host/nextcloud-operator/components/common"
-	cron "git.indie.host/nextcloud-operator/components/cron"
-	"git.indie.host/nextcloud-operator/components/web"
-	"git.indie.host/nextcloud-operator/util"
+	appsv1alpha1 "git.indie.host/operators/nextcloud-operator/api/v1alpha1"
 )
 
 // NextcloudReconciler reconciles a Nextcloud object
@@ -65,7 +60,7 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	log := r.Log.WithValues("nextcloud", req.NamespacedName)
 	log.Info("reconciling")
 
-	app := &appsv1beta1.Nextcloud{}
+	app := &appsv1alpha1.Nextcloud{}
 	if err := r.Get(ctx, req.NamespacedName, app); err != nil {
 		log.Error(err, "unable to fetch Nextcloud")
 		// we'll ignore not-found errors, since they can't be fixed by an immediate
@@ -74,57 +69,67 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 		return ctrl.Result{}, ignoreNotFound(err)
 	}
 
-	// var phase appsv1beta1.Phase
+	// var phase appsv1alpha1.Phase
 
-	phase, err := util.GetAppPhase(app.Status, app.Spec.Version)
+	/* 	phase, err := util.GetAppPhase(app.Status, app.Spec.Version)
+	   	if err != nil {
+	   		return ctrl.Result{}, err
+	   	}
+
+	   	fmt.Println(phase) */
+
+	application.Init(app, r)
+
+	sett, err := application.CreateAndInitSettings(app, r)
 	if err != nil {
 		return ctrl.Result{}, err
 	}
 
-	fmt.Println(phase)
+	for _, obj := range sett.GetObjects() {
+		s := objects.NewObjectSyncer(obj, app, r)
 
-	common := common.CreateAndInit(app)
-
-	componentApp := application.CreateAndInit(common)
-	componentCron := cron.CreateAndInit(common)
-	componentWeb := web.CreateAndInit(common)
-	componentCLI := cli.CreateAndInit(common)
-
-	appSyncers := []syncer.Interface{
-		componentApp.NewSecretSyncer(r),
-		componentApp.NewDeploymentSyncer(r),
-		componentApp.NewServiceSyncer(r),
-	}
-
-	cronSyncers := []syncer.Interface{
-		componentCron.NewCronJobSyncer(r),
-	}
-
-	webSyncers := []syncer.Interface{
-		componentWeb.NewConfigMapSyncer(r),
-		componentWeb.NewDeploymentSyncer(r),
-		componentWeb.NewIngressSyncer(r),
-		componentWeb.NewServiceSyncer(r),
-	}
-
-	err = r.sync(appSyncers)
-	err = r.sync(cronSyncers)
-
-	if phase == appsv1beta1.PhaseInstalling || phase == appsv1beta1.PhaseRunning {
-		jobSyncers := []syncer.Interface{
-			componentCLI.NewJobSyncer(r),
+		if err := syncer.Sync(context.TODO(), s, r.GetRecorder()); err != nil {
+			return ctrl.Result{}, err
 		}
 
-		err = r.sync(jobSyncers)
 	}
 
-	err = r.sync(webSyncers)
-	if err != nil {
-		return ctrl.Result{}, err
-	}
+	/* 	syncers, err := application.NewSyncers(app, r, app)
+	   	if err != nil {
+	   		return ctrl.Result{}, err
+	   	}
+
+	   	err = r.sync(syncers)
+	   	if err != nil {
+	   		return ctrl.Result{}, err
+	   	} */
+
+	//	for _, obj := range sett.GetObjects() {
+	//	meta.SetObjectMeta(sett.CommonMeta, obj)
+	//	s := objects.NewObjectSyncer(obj, owner, r)
+
+	//	if err := syncer.Sync(context.TODO(), s, r.GetRecorder()); err != nil {
+	//		return syncers, err
+	//	}
+
+	//		fmt.Println(obj)
+
+	//	}
+
+	// fmt.Println(sett)
+
+	/*
+		if phase == appsv1alpha1.PhaseInstalling || phase == appsv1alpha1.PhaseRunning {
+			jobSyncers := []syncer.Interface{
+				componentCLI.NewJobSyncer(r),
+			}
+
+			err = r.sync(jobSyncers)
+		}
+	*/
 
 	app.Status.Version = app.Spec.Version
-	app.Status.Phase = appsv1beta1.PhaseRunning
+	app.Status.Phase = appsv1alpha1.PhaseRunning
 
 	oldStatus := app.Status.DeepCopy()
 	if oldStatus != &app.Status {
@@ -138,7 +143,7 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 func (r *NextcloudReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&appsv1beta1.Nextcloud{}).
+		For(&appsv1alpha1.Nextcloud{}).
 		Complete(r)
 }
 

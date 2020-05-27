@@ -6,6 +6,8 @@ spec:
   # Add fields here
   version: "16"
   settings:
+    createOptions:
+      generate: envFile
     database:
       username:
         value: "nextcloud"
