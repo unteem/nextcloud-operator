@@ -19,14 +19,14 @@ import (
 	"flag"
 	"os"
 
-	appsv1alpha1 "git.indie.host/operators/nextcloud-operator/api/v1alpha1"
-	"git.indie.host/operators/nextcloud-operator/controllers"
 	batchv1 "k8s.io/api/batch/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	"k8s.libre.sh/application"
+	appsv1alpha1 "k8s.libre.sh/apps/nextcloud/api/v1alpha1"
+	"k8s.libre.sh/apps/nextcloud/controllers"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	// +kubebuilder:scaffold:imports

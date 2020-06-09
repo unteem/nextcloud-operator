@@ -27,8 +27,8 @@ import (
 	"k8s.libre.sh/objects"
 	ctrl "sigs.k8s.io/controller-runtime"
 
-	appsv1alpha1 "git.indie.host/operators/nextcloud-operator/api/v1alpha1"
-	"git.indie.host/operators/nextcloud-operator/util"
+	appsv1alpha1 "k8s.libre.sh/apps/nextcloud/api/v1alpha1"
+	"k8s.libre.sh/apps/nextcloud/util"
 
 	oplib "github.com/redhat-cop/operator-utils/pkg/util"
 )

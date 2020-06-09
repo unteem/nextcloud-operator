@@ -1,8 +1,8 @@
 package util
 
 import (
-	appsv1alpha1 "git.indie.host/operators/nextcloud-operator/api/v1alpha1"
 	version "github.com/hashicorp/go-version"
+	appsv1alpha1 "k8s.libre.sh/apps/nextcloud/api/v1alpha1"
 )
 
 //. TOFIX get install status and desired status, if status =! nil ??

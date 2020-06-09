@@ -1,4 +1,4 @@
-module git.indie.host/operators/nextcloud-operator
+module k8s.libre.sh/apps/nextcloud
 
 go 1.13
 
@@ -9,7 +9,6 @@ require (
 	github.com/onsi/gomega v1.9.0
 	github.com/presslabs/controller-util v0.2.2
 	github.com/redhat-cop/operator-utils v0.2.4
-	golang.org/x/net v0.0.0-20200425230154-ff2c4b7c35a0 // indirect
 	k8s.io/api v0.18.2
 	k8s.io/apimachinery v0.18.2
 	k8s.io/client-go v12.0.0+incompatible
@@ -17,7 +16,7 @@ require (
 	sigs.k8s.io/controller-runtime v0.6.0
 )
 
-replace git.indie.host/operators/nextcloud-operator => ./
+replace k8s.libre.sh/apps/nextcloud => ./
 
 replace k8s.libre.sh => ./../application/
 
