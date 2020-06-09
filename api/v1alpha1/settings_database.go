@@ -27,49 +27,20 @@ type Database struct {
 }
 
 func (s *Database) SetDefaults() {
-	/* 	if len(d.Database) == 0 {
-	   		d.Database = "nextcloud"
-	   	}
-	   	if len(d.Host) == 0 {
-	   		d.Host = "nextcloud-database"
-	   	}
-	   	if len(d.Port) == 0 {
-	   		d.Port = "5425"
-	   	}
-	   	if len(d.Type) == 0 {
-	   		d.Type = "pgsql"
-	   	} */
+	if len(s.Database.Value) == 0 || len(s.Database.ValueFrom.Ref) == 0 {
+		s.Database.Value = "nextcloud"
+	}
+
+	if len(s.Port.Value) == 0 || len(s.Port.ValueFrom.Ref) == 0 {
+		s.Port.Value = "5425"
+	}
+
+	if len(s.Type.Value) == 0 || len(s.Type.ValueFrom.Ref) == 0 {
+		s.Type.Value = "pgsql"
+	}
 }
 
 func (s *Database) GetParameters() *parameters.Parameters {
-	s.SetDefaults()
 	params, _ := parameters.Marshal(*s)
 	return &params
 }
-
-/* func (s *Database) GetParameters() parameters.Parameters {
-
-	s.SetDefaults()
-
-	params, _ := parameters.Marshal(s.DatabaseConfig)
-	secretParams, _ := parameters.Marshal(s.DatabaseSecrets)
-
-	for _, p := range secretParams {
-		// TODO Enforce secret type ?
-		if len(p.Type) == 0 {
-			p.Type = parameters.SecretParameter
-		}
-		if len(p.ValueFrom.Ref) == 0 && len(p.Generate) == 0 && len(p.Value) == 0 {
-			p.Generate = parameters.GenerateRand12
-		}
-		// TODO TOFIX
-		if len(p.MountType) == 0 {
-			p.MountType = parameters.MountEnvFile
-		}
-	}
-
-	params = append(params, secretParams...)
-
-	return params
-}
-*/

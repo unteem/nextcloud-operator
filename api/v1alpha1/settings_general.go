@@ -19,33 +19,95 @@ import (
 	"k8s.libre.sh/application/settings/parameters"
 )
 
-type AppSettings struct {
+type General struct {
+	AppStore       AppStore `json:"appStore,omitempty"`
+	Locales        Locales  `json:"locales,omitempty"`
+	GlobalSecrets  `json:",inline"`
+	GlobalSettings `json:",inline"`
+}
+
+func (s *General) SetDefaults() {
+	s.AppStore.SetDefaults()
+	s.Locales.SetDefaults()
+	s.GlobalSecrets.SetDefaults()
+	s.GlobalSettings.SetDefaults()
+
+}
+
+func (s *General) GetParameters() *parameters.Parameters {
+	params := append(*s.AppStore.GetParameters(), *s.Locales.GetParameters()...)
+	params = append(params, *s.GlobalSecrets.GetParameters()...)
+	params = append(params, *s.GlobalSettings.GetParameters()...)
+	return &params
+}
+
+type GlobalSettings struct {
+	Domains           parameters.Parameter `json:"domains,omitempty" env:"NEXTCLOUD_TRUSTED_DOMAINS"`
 	OverwriteCLI      parameters.Parameter `json:"overwriteCLI,omitempty" env:"OVERWRITE_CLI_URL"`
 	OverwriteProtocol parameters.Parameter `json:"overwriteProtocol,omitempty" env:"OVERWRITE_PROTOCOL"`
 	DataDirectory     parameters.Parameter `json:"dataDirectory,omitempty" env:"DATA_DIRECTORY"`
 	Debug             parameters.Parameter `json:"debug,omitempty" env:"DEBUG"`
 	ReadOnly          parameters.Parameter `json:"readOnly,omitempty" env:"CONFIG_READONLY"`
-	UpdateChecker     parameters.Parameter `json:"updateChecker,romitempty" env:"UPDATE_CHECKER"`
+	UpdateChecker     parameters.Parameter `json:"updateChecker,omitempty" env:"UPDATE_CHECKER"`
 	UpdateURL         parameters.Parameter `json:"udpateURL,omitempty" env:"OVERWRITECLI"`
 	UpdateChannel     parameters.Parameter `json:"updateChannel,omitempty" env:"UPDATE_URL"`
 	UpdateDisable     parameters.Parameter `json:"updateDisable,omitempty" env:"UPDATE_CHANNEL"`
 	BruteForce        parameters.Parameter `json:"bruteforce,omitempty" env:"UPDATE_DISABLE_WEB"`
 }
 
-func (s *AppSettings) GetParameters() *parameters.Parameters {
+func (s *GlobalSettings) GetParameters() *parameters.Parameters {
 	params, _ := parameters.Marshal(*s)
 	return &params
 }
 
-type AppSecrets struct {
+func (s *GlobalSettings) SetDefaults() {
+	if len(s.ReadOnly.Value) == 0 || len(s.ReadOnly.ValueFrom.Ref) == 0 {
+		s.ReadOnly.Value = "true"
+	}
+	if len(s.DataDirectory.Value) == 0 || len(s.DataDirectory.ValueFrom.Ref) == 0 {
+		s.DataDirectory.Value = "/var/www/html/data"
+	}
+	if len(s.UpdateChecker.Value) == 0 || len(s.UpdateChecker.ValueFrom.Ref) == 0 {
+		s.UpdateChecker.Value = "false"
+	}
+	if len(s.UpdateDisable.Value) == 0 || len(s.UpdateDisable.ValueFrom.Ref) == 0 {
+		s.UpdateDisable.Value = "true"
+	}
+	if len(s.Domains.Value) == 0 || len(s.Domains.ValueFrom.Ref) == 0 {
+		s.Domains.Value = "{{ .settings.app.INSTANCE_ID }}"
+		s.Domains.Generate = parameters.GenerateTemplate
+		s.Domains.Type = parameters.SecretParameter
+	}
+}
+
+type GlobalSecrets struct {
 	InstanceID    parameters.Parameter `json:"instanceID,omitempty" env:"INSTANCE_ID"`
 	PasswordSalt  parameters.Parameter `json:"passwordSalt,omitempty" env:"PASSWORD_SALT"`
-	Secret        parameters.Parameter `json:"secret,omiempty" env:"SECRET"`
+	Secret        parameters.Parameter `json:"secret,omitempty" env:"SECRET"`
 	AdminPassword parameters.Parameter `json:"adminPassword,omitempty" env:"ADMIN_PASSWORD"`
 	AdminUsername parameters.Parameter `json:"adminUsername,omitempty" env:"ADMIN_USERNAME"`
 }
 
-func (s *AppSecrets) GetParameters() *parameters.Parameters {
+func (s *GlobalSecrets) SetDefaults() {
+	// TODO return warning if value is defined and ignore it. Or use secretParameter type to enforce no values
+	if len(s.InstanceID.Value) > 0 || len(s.InstanceID.ValueFrom.Ref) == 0 {
+		s.InstanceID.Generate = parameters.GenerateRand12
+	}
+	if len(s.PasswordSalt.Value) == 0 || len(s.PasswordSalt.ValueFrom.Ref) == 0 {
+		s.PasswordSalt.Generate = parameters.GenerateRand12
+	}
+	if len(s.Secret.Value) == 0 || len(s.Secret.ValueFrom.Ref) == 0 {
+		s.Secret.Generate = parameters.GenerateRand12
+	}
+	if len(s.AdminPassword.Value) == 0 || len(s.AdminPassword.ValueFrom.Ref) == 0 {
+		s.AdminPassword.Generate = parameters.GenerateRand12
+	}
+	if len(s.AdminUsername.Value) == 0 || len(s.AdminUsername.ValueFrom.Ref) == 0 {
+		s.AdminUsername.Value = "admin"
+	}
+}
+
+func (s *GlobalSecrets) GetParameters() *parameters.Parameters {
 	params, _ := parameters.Marshal(*s)
 	return &params
 }
@@ -57,6 +119,12 @@ type AppStore struct {
 	Default parameters.Parameter `json:"default,omitempty" env:"APPS_DEFAULT"`
 	// StoreUrl defines the URL for the app store
 	StoreURL parameters.Parameter `json:"storeURL,omitempty" env:"APPS_STORE_URL"`
+}
+
+func (s *AppStore) SetDefaults() {
+	if len(s.StoreEnabled.Value) == 0 || len(s.StoreEnabled.ValueFrom.Ref) == 0 {
+		s.StoreEnabled.Value = "false"
+	}
 }
 
 func (s *AppStore) GetParameters() *parameters.Parameters {
@@ -72,25 +140,9 @@ type Locales struct {
 	ForceLocale   parameters.Parameter `json:"forceLocale,omitempty" env:"DEFAULT_LOCALE"`
 }
 
+func (s *Locales) SetDefaults() {}
+
 func (s *Locales) GetParameters() *parameters.Parameters {
 	params, _ := parameters.Marshal(*s)
-	return &params
-}
-
-type General struct {
-	AppStore    AppStore `json:"appStore,omitempty"`
-	Locales     Locales  `json:"locales,omitempty"`
-	AppSecrets  `json:",inline"`
-	AppSettings `json:",inline"`
-}
-
-func (s *General) SetDefaults() *parameters.Parameters {
-	return &parameters.Parameters{}
-}
-
-func (s *General) GetParameters() *parameters.Parameters {
-	params := append(*s.AppStore.GetParameters(), *s.Locales.GetParameters()...)
-	params = append(params, *s.AppSecrets.GetParameters()...)
-	params = append(params, *s.AppSettings.GetParameters()...)
 	return &params
 }

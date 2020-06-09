@@ -17,9 +17,11 @@ package v1alpha1
 
 import (
 	"k8s.libre.sh/application"
+	"k8s.libre.sh/application/components"
 	"k8s.libre.sh/application/settings"
 	"k8s.libre.sh/interfaces"
 	"k8s.libre.sh/meta"
+	"k8s.libre.sh/objects/job"
 )
 
 var (
@@ -42,63 +44,110 @@ func (o *Nextcloud) SetManagedBy(s string)       {}
 func (o *Nextcloud) GetApplication() string      { return "Nextcloud" }
 func (o *Nextcloud) SetApplication(s string)     {}
 
-func (o *Nextcloud) GetSettings() settings.Settings {
-	s := settings.NewSettings(&o.Spec.Settings)
-	//	s.Generate = o.Spec.Settings.CreateOptions.Generate
-	return s
-}
+func (o *Nextcloud) GetSettings() map[string]settings.Settings {
 
-func (app *Nextcloud) GetComponents() map[int]application.Component {
-	components := map[int]application.Component{
-		//	0: app.Spec.App,
+	// TODO TO FIX
+	setts := map[string]settings.Settings{
+		"app": settings.NewSettings(&o.Spec.Settings.AppSettings),
+		"web": settings.NewSettings(&o.Spec.Settings.Web),
 	}
 
-	return components
-}
-
-/* func (c *App) SetDefaults() {
-
-	if c.Workload.Backend == nil {
-		c.Workload.Backend = &components.Backend{}
-	}
-	if &c.Workload.Backend.Port == nil || c.Workload.Backend.Port.Port == 0 {
-		c.Workload.Backend.Port.Port = 9000
-	}
-	if len(c.Workload.Backend.Port.Protocol) == 0 {
-		c.Workload.Backend.Port.Protocol = "TCP"
-	}
-	if len(c.Workload.Backend.Port.Name) == 0 {
-		c.Workload.Backend.Port.Name = "api"
-	}
-
-	if len(c.Workload.Backend.Paths) == 0 {
-		c.Workload.Backend.Paths = []string{"/"}
-	}
-
-	if c.Workload.SecurityContext == nil {
-		c.Workload.SecurityContext = &corev1.PodSecurityContext{
-			RunAsUser:  &wwwDataUserID,
-			RunAsGroup: &wwwDataUserID,
-			FSGroup:    &wwwDataUserID,
+	if len(o.Status.Settings) > 0 {
+		for k, v := range o.Status.Settings {
+			setts[k].(*settings.Component).ConfigSpec.Sources = append(setts[k].(*settings.Component).ConfigSpec.Sources, v.Sources...)
 		}
 	}
-	c.Workload.SetDefaults()
+
+	return setts
+}
+
+func (app *Nextcloud) GetComponentsSyncOrder() map[int]string {
+	return map[int]string{
+		0: "settings",
+		1: "cli",
+		2: "app",
+		3: "web",
+	}
+}
+func (app *Nextcloud) GetComponents() map[string]application.Component {
+
+	cpts := map[string]application.Component{
+		"app": app.Spec.App,
+		"web": app.Spec.Web,
+		"cli": app.Spec.CLI,
+	}
+
+	return cpts
+}
+
+func (app *Nextcloud) Init() {
+
+	if app.Spec.App == nil {
+		app.Spec.App = &App{}
+		app.Spec.App.InternalWorkload = &components.InternalWorkload{}
+	}
+
+	if app.Spec.Web == nil {
+		app.Spec.Web = &Web{}
+		app.Spec.Web.Workload = &components.Workload{}
+
+	}
+
+	if app.Spec.CLI == nil {
+		app.Spec.CLI = &CLI{}
+		app.Spec.CLI.CLI = &components.CLI{}
+
+	}
+
+	for _, c := range app.GetComponents() {
+		c.Init()
+	}
+
+	if app.Spec.CLI == nil {
+		app.Spec.CLI = &CLI{}
+		app.Spec.CLI.Job = &job.Job{}
+	}
+
+	app.Spec.CLI.Init()
+
+	app.Spec.Settings.AppSettings.CreateOptions.Init()
+	app.Spec.Settings.Web.CreateOptions.Init()
 
 }
-*/
+
+func (app *Nextcloud) SetDefaultMeta() {
+
+	app.Spec.Web.ObjectMeta.SetComponent("web")
+
+	// TODO TO FIX create a func in application package
+	for _, c := range app.GetComponents() {
+
+		meta.SetObjectMetaFromInstance(app, c)
+
+		for _, o := range c.GetObjects() {
+			meta.SetObjectMeta(c, o)
+		}
+	}
+
+	// TODO TOFIX
+	meta.SetObjectMeta(app, app.Spec.CLI.ObjectMeta)
+	app.Spec.CLI.ObjectMeta.SetComponent("cli")
+
+	meta.SetObjectMeta(app, app.Spec.Settings.AppSettings.CreateOptions.CommonMeta)
+	app.Spec.Settings.AppSettings.CreateOptions.CommonMeta.Labels["app.kubernetes.io/component"] = "app"
+
+	meta.SetObjectMeta(app, app.Spec.Settings.Web.CreateOptions.CommonMeta)
+	app.Spec.Settings.Web.CreateOptions.CommonMeta.Labels["app.kubernetes.io/component"] = "web"
+
+}
+
 func (app *Nextcloud) SetDefaults() {
 
-	if app.Spec.Settings.CreateOptions.CommonMeta == nil {
-		app.Spec.Settings.CreateOptions.CommonMeta = new(meta.ObjectMeta)
-	}
+	app.Spec.App.SetDefaults()
+	app.Spec.Web.SetDefaults()
+	app.Spec.CLI.SetDefaults()
 
-	if app.Spec.Settings.CreateOptions.CommonMeta.Labels == nil {
-		app.Spec.Settings.CreateOptions.CommonMeta.Labels = make(map[string]string)
-	}
-
-	app.Spec.Settings.CreateOptions.CommonMeta.SetComponent("settings")
-
-	meta.SetObjectMeta(app, app.Spec.Settings.CreateOptions.CommonMeta)
 	app.Spec.Settings.SetDefaults()
-	//	app.Spec.App.SetDefaults()
+	app.Spec.Settings.SetDefaults()
+
 }

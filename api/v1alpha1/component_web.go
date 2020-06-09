@@ -15,20 +15,31 @@ limitations under the License.
 
 package v1alpha1
 
-import (
-	"k8s.libre.sh/application/settings/parameters"
-)
+func (app *Web) SetDefaults() {
 
-type Redis struct {
-	Username parameters.Parameter `json:"username,omitempty" env:"REDIS_USERNAME"`
-	Password parameters.Parameter `json:"password,omitempty" env:"REDIS_PASSWORD"`
-	Host     parameters.Parameter `json:"host,omitempty" env:"REDIS_HOST"`
-	Port     parameters.Parameter `json:"port,omitempty" env:"REDIS_HOST_PORT"`
-}
+	app.ObjectMeta.SetComponent("web")
 
-func (d *Redis) SetDefaults() {
-}
+	if len(app.Backend.Paths) == 0 {
+		app.Backend.Paths = []string{"/"}
+	}
 
-func (s *Redis) GetParameters() *parameters.Parameters {
-	return &parameters.Parameters{}
+	if &app.Backend.Port == nil || app.Backend.Port.Port == 0 {
+		app.Backend.Port.Port = 80
+	}
+	if len(app.Port.Protocol) == 0 {
+		app.Backend.Port.Protocol = "TCP"
+	}
+	if len(app.Backend.Port.Name) == 0 {
+		app.Backend.Port.Name = "http"
+	}
+
+	if len(app.Image) == 0 {
+		app.Image = "libresh/nextcloud:18.0.0"
+	}
+
+	if len(app.Settings) == 0 {
+		app.Settings = []string{"web"}
+	}
+
+	app.Workload.SetDefaults()
 }

@@ -5,12 +5,48 @@ metadata:
 spec:
   # Add fields here
   version: "16"
+  app:
+    deployment:
+      replicas: 2
+      command: 
+        - php-fpm
+  web:
+    deployment:
+      command: 
+        - php-fpm
+#  cli:
+#    command: 
+#      - sh 
+#      - "-c"
+#      -  "sleep 10"
+    # args: 
   settings:
-    createOptions:
-      generate: envFile
-    database:
-      username:
-        value: "nextcloud"
-  #  redis:
-  #  smtp:
-  #  objectStore:
+    app:
+      createOptions:
+        generate: envFile
+      database:
+      #  database:
+        host:
+          value: "nextcloud-pg"
+      #  port:
+      #  type:
+      #  username:
+      #  password:
+      objectStore:
+        bucket:
+          value: nextcloud-bucket
+        host:
+          value: "https://standard.indie.host"
+        #  port:
+        #  autocreate:
+        #  ssl:
+        #  region:
+        #  pathStyle:
+        accessKeyID:
+          ref: bucket-creds
+          refType: secret
+          fromKey: AWS_ACCESS_KEY_ID
+        secretAccessKey:
+          ref: bucket-creds
+          refType: secret
+          fromKey: AWS_SECRET_ACCESS_KEY

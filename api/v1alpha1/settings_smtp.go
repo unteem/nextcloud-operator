@@ -38,7 +38,6 @@ func (d *SMTP) SetDefaults() {
 }
 
 func (s *SMTP) GetParameters() *parameters.Parameters {
-	s.SetDefaults()
 	params, _ := parameters.Marshal(*s)
 	return &params
 }

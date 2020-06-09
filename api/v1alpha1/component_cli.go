@@ -16,19 +16,30 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.libre.sh/application/settings/parameters"
+	corev1 "k8s.io/api/core/v1"
 )
 
-type Redis struct {
-	Username parameters.Parameter `json:"username,omitempty" env:"REDIS_USERNAME"`
-	Password parameters.Parameter `json:"password,omitempty" env:"REDIS_PASSWORD"`
-	Host     parameters.Parameter `json:"host,omitempty" env:"REDIS_HOST"`
-	Port     parameters.Parameter `json:"port,omitempty" env:"REDIS_HOST_PORT"`
-}
+func (app *CLI) SetDefaults() {
 
-func (d *Redis) SetDefaults() {
-}
+	if app.SecurityContext == nil {
+		app.SecurityContext = &corev1.PodSecurityContext{
+			RunAsUser:  &wwwDataUserID,
+			RunAsGroup: &wwwDataUserID,
+			FSGroup:    &wwwDataUserID,
+		}
+	}
 
-func (s *Redis) GetParameters() *parameters.Parameters {
-	return &parameters.Parameters{}
+	if len(app.Image) == 0 {
+		app.Image = "libresh/nextcloud:18.0.0"
+	}
+
+	if len(app.RestartPolicy) == 0 {
+		app.RestartPolicy = corev1.RestartPolicyOnFailure
+	}
+
+	app.ObjectMeta.SetComponent("cli")
+
+	// TODO TOFIX
+	// meta.SetObjectMeta(app, app.ObjectMeta)
+
 }

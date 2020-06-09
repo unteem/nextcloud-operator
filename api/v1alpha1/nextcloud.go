@@ -18,23 +18,41 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.libre.sh/application/components"
+	"k8s.libre.sh/application/settings"
 )
 
 // NextcloudStatus defines the observed state of Nextcloud
 type NextcloudStatus struct {
 	// Version defines the installed version
-	Version string `json:"version,omitempty"`
-	Phase   Phase  `json:"Phase,omitempty"`
+	Version  string                    `json:"version,omitempty"`
+	Settings map[string]SettingsStatus `json:"settings,omitempty"`
+	Phase    Phase                     `json:"phase,omitempty"`
+}
+
+type SettingsStatus struct {
+	Sources []settings.Source `json:"sources,omitempty"`
 }
 
 // NextcloudSpec defines the desired state of Nextcloud
 type NextcloudSpec struct {
-	Version  string              `json:"version,omitempty"`
-	Settings Settings            `json:"settings,omitempty"`
-	App      components.Workload `json:"app,omitempty"`
-	Web      components.Workload `json:"web,omitempty"`
-	//	CLI         Component           `json:"cli,omitempty"`
+	Version  string   `json:"version,omitempty"`
+	Settings Settings `json:"settings,omitempty"`
+	App      *App     `json:"app,omitempty"`
+	Web      *Web     `json:"web,omitempty"`
+	CLI      *CLI     `json:"cli,omitempty"`
 	//	Cron        Component           `json:"cron,omitempty"`
+}
+
+type App struct {
+	*components.InternalWorkload `json:",inline"`
+}
+
+type Web struct {
+	*components.Workload `json:",inline"`
+}
+
+type CLI struct {
+	*components.CLI `json:",inline"`
 }
 
 // Phase is the current status of a App as a whole.

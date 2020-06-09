@@ -1,10 +1,10 @@
 /*
 
-Licensed under the GNU AFFERO GENERAL PUBLIC LICENSE, Version 3 (the "License");
+Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    https://www.gnu.org/licenses/agpl-3.0.html
+    http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -13,9 +13,17 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package web
+package v1alpha1
 
-const conf = `
+import (
+	"k8s.libre.sh/application/settings"
+	"k8s.libre.sh/application/settings/parameters"
+	"k8s.libre.sh/meta"
+	"k8s.libre.sh/objects"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+)
+
+const nginxConf = `
 	user www-data;
 	events {
 	worker_connections 768;
@@ -23,9 +31,9 @@ const conf = `
 
 	http {
 	upstream backend {
-		server {{ .Name }}-app:9000;
+		server {{ .components.app.service.meta.name }}:{{ .components.app.service.port.port }};
 	}
-	include /etc/nginx/mime.types;
+	include /etc/nginx/mime.types
 	default_type application/octet-stream;
 
 	server {
@@ -122,3 +130,51 @@ const conf = `
 	}
 }
 `
+
+type WebSettings struct {
+	CreateOptions settings.CreateOptions `json:"createOptions,omitempty"`
+	Sources       []settings.Source      `json:"sources,omitempty"`
+	ConfTemplate  parameters.Parameter   `json:"conf,omitempty" env:"nginx-conf"`
+}
+
+func (s *WebSettings) SetDefaults() {
+
+	//	s.CreateOptions.Init()
+	//	s.CreateOptions.CommonMeta.Labels["app.kubernetes.io/component"] = "web"
+
+	if len(s.ConfTemplate.Value) > 0 || len(s.ConfTemplate.ValueFrom.Ref) == 0 {
+		s.ConfTemplate.Value = nginxConf
+		s.ConfTemplate.Generate = parameters.GenerateTemplate
+		s.ConfTemplate.MountType = parameters.MountEnvFile
+		s.ConfTemplate.Type = parameters.ConfigParameter
+		s.ConfTemplate.MountType = parameters.MountFile
+		s.ConfTemplate.MountPath.Path = "/etc/nginx/nginx.conf"
+		s.ConfTemplate.MountPath.SubPath = "nginx.conf"
+	}
+}
+
+func (s *WebSettings) GetConfig() settings.Config {
+
+	params, _ := parameters.Marshal(*s)
+
+	settings := &settings.ConfigSpec{
+		Parameters: &params,
+		Sources:    s.Sources,
+	}
+
+	return settings
+}
+
+func (s *WebSettings) GetMeta() meta.Instance { return s.CreateOptions.CommonMeta }
+
+func (s *WebSettings) GetObjects() map[int]objects.Object {
+	return nil
+}
+
+func (s *WebSettings) Init(c client.Client) error {
+	return nil
+}
+
+func (s *WebSettings) GetCreateOptions() *settings.CreateOptions {
+	return &s.CreateOptions
+}

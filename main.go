@@ -21,10 +21,12 @@ import (
 
 	appsv1alpha1 "git.indie.host/operators/nextcloud-operator/api/v1alpha1"
 	"git.indie.host/operators/nextcloud-operator/controllers"
+	batchv1 "k8s.io/api/batch/v1"
 	networking "k8s.io/api/networking/v1beta1"
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"k8s.libre.sh/application"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 	// +kubebuilder:scaffold:imports
@@ -35,17 +37,19 @@ var (
 	setupLog = ctrl.Log.WithName("setup")
 )
 
+const controllerName = "nextcloud-controller"
+
 func init() {
 	_ = clientgoscheme.AddToScheme(scheme)
 
 	_ = appsv1alpha1.AddToScheme(scheme)
 	_ = networking.AddToScheme(scheme)
+	_ = batchv1.AddToScheme(scheme)
 	// +kubebuilder:scaffold:scheme
 	//	_ = appsv1.AddToScheme(scheme)
 	//	_ = corev1.AddToScheme(scheme)
 	//	_ = extv1alpha1.AddToScheme(scheme)
 	//	_ = batchv1alpha1.AddToScheme(scheme)
-	//	_ = batchv1.AddToScheme(scheme)
 	//	_ = monitoringv1.AddToScheme(scheme)
 
 }
@@ -74,9 +78,9 @@ func main() {
 	}
 
 	if err = (&controllers.NextcloudReconciler{
-		Client: mgr.GetClient(),
-		Log:    ctrl.Log.WithName("controllers").WithName("Nextcloud"),
-		Scheme: mgr.GetScheme(),
+		//	ReconcilerBase:      oplibutil.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor(controllerName)),
+		ReconcilerBase: application.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor(controllerName)),
+		Log:            ctrl.Log.WithName("controllers").WithName("Nextcloud"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Nextcloud")
 		os.Exit(1)
