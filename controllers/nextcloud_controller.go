@@ -17,13 +17,13 @@ package controllers
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/go-logr/logr"
 	"github.com/presslabs/controller-util/syncer"
 	appsv1 "k8s.io/api/apps/v1"
 	apierrs "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.libre.sh/application"
+	"k8s.libre.sh/application/settings/parameters"
 	"k8s.libre.sh/objects"
 	ctrl "sigs.k8s.io/controller-runtime"
 
@@ -52,6 +52,9 @@ func (r *NextcloudReconciler) GetLogger() logr.Logger { return r.Log }
 // +kubebuilder:rbac:groups=apps.libre.sh,resources=nextclouds/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups=batch,resources=jobs,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=batch,resources=jobs/status,verbs=get
+// +kubebuilder:rbac:groups=,resources=secrets;configmaps;services;events,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=ingresses,verbs=get;list;watch;create;update;patch;delete
 func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 	ctx := context.Background()
 	log := r.Log.WithValues("nextcloud", req.NamespacedName)
@@ -104,18 +107,22 @@ func (r *NextcloudReconciler) Reconcile(req ctrl.Request) (ctrl.Result, error) {
 
 	switch phase {
 	case appsv1alpha1.PhaseInstalling:
-		cpts["cli"].(*appsv1alpha1.CLI).Job.Args = []string{"install"}
-		fmt.Println(cpts["cli"].(*appsv1alpha1.CLI).Job.Args)
+		cpts["cli"].(*appsv1alpha1.CLI).Job.Args = []string{"/install.sh"}
 	case appsv1alpha1.PhaseUpgrading:
-		cpts["cli"].(*appsv1alpha1.CLI).Job.Args = []string{"upgrade"}
+		cpts["cli"].(*appsv1alpha1.CLI).Job.Args = []string{"/upgrade.sh"}
 	default:
+		installParam := &parameters.Parameter{
+			Value:     "true",
+			Key:       "INSTALLED",
+			MountType: parameters.MountLiteral,
+		}
+		*cpts["app"].(*appsv1alpha1.App).Deployment.Parameters = append(*cpts["app"].(*appsv1alpha1.App).Deployment.Parameters, installParam)
 		delete(cpts, "cli")
 	}
 
 	// Components Object Syncers
 	for _, c := range cpts {
 		syncers[c.GetComponent()] = application.NewObjectSyncersFromComponent(c, r, app)
-
 	}
 
 	cptsOrder := app.GetComponentsSyncOrder()

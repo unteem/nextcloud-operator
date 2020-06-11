@@ -22,20 +22,20 @@ type Database struct {
 	Host     parameters.Parameter `json:"host,omitempty" env:"DB_HOST"`
 	Port     parameters.Parameter `json:"port,omitempty" env:"DB_PORT"`
 	Type     parameters.Parameter `json:"type,omitempty" env:"DB_TYPE"`
-	Username parameters.Parameter `json:"username,omitempty" env:"DB_USERNAME"`
+	Username parameters.Parameter `json:"username,omitempty" env:"DB_USER"`
 	Password parameters.Parameter `json:"password,omitempty" env:"DB_PASSWORD"`
 }
 
 func (s *Database) SetDefaults() {
-	if len(s.Database.Value) == 0 || len(s.Database.ValueFrom.Ref) == 0 {
+	if len(s.Database.Value) == 0 && len(s.Database.ValueFrom.Ref) == 0 {
 		s.Database.Value = "nextcloud"
 	}
 
-	if len(s.Port.Value) == 0 || len(s.Port.ValueFrom.Ref) == 0 {
+	if len(s.Port.Value) == 0 && len(s.Port.ValueFrom.Ref) == 0 {
 		s.Port.Value = "5425"
 	}
 
-	if len(s.Type.Value) == 0 || len(s.Type.ValueFrom.Ref) == 0 {
+	if len(s.Type.Value) == 0 && len(s.Type.ValueFrom.Ref) == 0 {
 		s.Type.Value = "pgsql"
 	}
 }

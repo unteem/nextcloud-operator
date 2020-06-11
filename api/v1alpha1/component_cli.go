@@ -37,6 +37,10 @@ func (app *CLI) SetDefaults() {
 		app.RestartPolicy = corev1.RestartPolicyOnFailure
 	}
 
+	if len(app.Settings) == 0 {
+		app.Settings = []string{"app"}
+	}
+
 	app.ObjectMeta.SetComponent("cli")
 
 	// TODO TOFIX

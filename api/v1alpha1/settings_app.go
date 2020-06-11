@@ -14,7 +14,7 @@ type AppSettings struct {
 	SMTP          SMTP                   `json:"smtp,omitempty"`
 	General       General                `json:"general,omitempty"`
 	ObjectStore   ObjectStore            `json:"objectStore,omitempty"`
-	Redis         Redis                  `json:"cache,omitempty"`
+	Redis         Redis                  `json:"redis,omitempty"`
 }
 
 func (s *AppSettings) GetMeta() meta.Instance { return s.CreateOptions.CommonMeta }

@@ -16,6 +16,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	"k8s.libre.sh/application/settings/parameters"
 )
 
@@ -49,34 +51,40 @@ type GlobalSettings struct {
 	Debug             parameters.Parameter `json:"debug,omitempty" env:"DEBUG"`
 	ReadOnly          parameters.Parameter `json:"readOnly,omitempty" env:"CONFIG_READONLY"`
 	UpdateChecker     parameters.Parameter `json:"updateChecker,omitempty" env:"UPDATE_CHECKER"`
-	UpdateURL         parameters.Parameter `json:"udpateURL,omitempty" env:"OVERWRITECLI"`
-	UpdateChannel     parameters.Parameter `json:"updateChannel,omitempty" env:"UPDATE_URL"`
-	UpdateDisable     parameters.Parameter `json:"updateDisable,omitempty" env:"UPDATE_CHANNEL"`
-	BruteForce        parameters.Parameter `json:"bruteforce,omitempty" env:"UPDATE_DISABLE_WEB"`
+	UpdateURL         parameters.Parameter `json:"udpateURL,omitempty" env:"UPDATE_URL"`
+	UpdateChannel     parameters.Parameter `json:"updateChannel,omitempty" env:"UPDATE_CHANNEL"`
+	UpdateDisable     parameters.Parameter `json:"updateDisable,omitempty" env:"UPDATE_DISABLE_WEB"`
+	BruteForce        parameters.Parameter `json:"bruteforce,omitempty" env:"BRUTEFORCE"`
+	Version           parameters.Parameter `json:"version,omitempty" env:"VERSION"`
 }
 
 func (s *GlobalSettings) GetParameters() *parameters.Parameters {
 	params, _ := parameters.Marshal(*s)
+	//	for _, p := range params {
+	//		fmt.Println(p)
+	//	}
 	return &params
 }
 
 func (s *GlobalSettings) SetDefaults() {
-	if len(s.ReadOnly.Value) == 0 || len(s.ReadOnly.ValueFrom.Ref) == 0 {
+	if len(s.ReadOnly.Value) == 0 && len(s.ReadOnly.ValueFrom.Ref) == 0 {
 		s.ReadOnly.Value = "true"
 	}
-	if len(s.DataDirectory.Value) == 0 || len(s.DataDirectory.ValueFrom.Ref) == 0 {
+	if len(s.DataDirectory.Value) == 0 && len(s.DataDirectory.ValueFrom.Ref) == 0 {
 		s.DataDirectory.Value = "/var/www/html/data"
 	}
-	if len(s.UpdateChecker.Value) == 0 || len(s.UpdateChecker.ValueFrom.Ref) == 0 {
+	if len(s.UpdateChecker.Value) == 0 && len(s.UpdateChecker.ValueFrom.Ref) == 0 {
 		s.UpdateChecker.Value = "false"
 	}
-	if len(s.UpdateDisable.Value) == 0 || len(s.UpdateDisable.ValueFrom.Ref) == 0 {
+	if len(s.UpdateDisable.Value) == 0 && len(s.UpdateDisable.ValueFrom.Ref) == 0 {
 		s.UpdateDisable.Value = "true"
 	}
-	if len(s.Domains.Value) == 0 || len(s.Domains.ValueFrom.Ref) == 0 {
-		s.Domains.Value = "{{ .settings.app.INSTANCE_ID }}"
-		s.Domains.Generate = parameters.GenerateTemplate
-		s.Domains.Type = parameters.SecretParameter
+	if len(s.Domains.Value) == 0 && len(s.Domains.ValueFrom.Ref) == 0 {
+		fmt.Println("YYYYYYYYYYYYYYYYYYYYYYYYYY")
+		fmt.Println(s.Domains)
+		/* 		s.Domains.Value = "{{ .components.web.network.hostname }}"
+		   		s.Domains.Generate = parameters.GenerateTemplate
+		   		s.Domains.Type = parameters.SecretParameter */
 	}
 }
 
@@ -84,25 +92,25 @@ type GlobalSecrets struct {
 	InstanceID    parameters.Parameter `json:"instanceID,omitempty" env:"INSTANCE_ID"`
 	PasswordSalt  parameters.Parameter `json:"passwordSalt,omitempty" env:"PASSWORD_SALT"`
 	Secret        parameters.Parameter `json:"secret,omitempty" env:"SECRET"`
-	AdminPassword parameters.Parameter `json:"adminPassword,omitempty" env:"ADMIN_PASSWORD"`
-	AdminUsername parameters.Parameter `json:"adminUsername,omitempty" env:"ADMIN_USERNAME"`
+	AdminPassword parameters.Parameter `json:"adminPassword,omitempty" env:"NEXTCLOUD_ADMIN_PASSWORD"`
+	AdminUsername parameters.Parameter `json:"adminUsername,omitempty" env:"NEXTCLOUD_ADMIN_USER"`
 }
 
 func (s *GlobalSecrets) SetDefaults() {
 	// TODO return warning if value is defined and ignore it. Or use secretParameter type to enforce no values
-	if len(s.InstanceID.Value) > 0 || len(s.InstanceID.ValueFrom.Ref) == 0 {
+	if len(s.InstanceID.Value) > 0 && len(s.InstanceID.ValueFrom.Ref) == 0 {
 		s.InstanceID.Generate = parameters.GenerateRand12
 	}
-	if len(s.PasswordSalt.Value) == 0 || len(s.PasswordSalt.ValueFrom.Ref) == 0 {
+	if len(s.PasswordSalt.Value) == 0 && len(s.PasswordSalt.ValueFrom.Ref) == 0 {
 		s.PasswordSalt.Generate = parameters.GenerateRand12
 	}
-	if len(s.Secret.Value) == 0 || len(s.Secret.ValueFrom.Ref) == 0 {
+	if len(s.Secret.Value) == 0 && len(s.Secret.ValueFrom.Ref) == 0 {
 		s.Secret.Generate = parameters.GenerateRand12
 	}
-	if len(s.AdminPassword.Value) == 0 || len(s.AdminPassword.ValueFrom.Ref) == 0 {
+	if len(s.AdminPassword.Value) == 0 && len(s.AdminPassword.ValueFrom.Ref) == 0 {
 		s.AdminPassword.Generate = parameters.GenerateRand12
 	}
-	if len(s.AdminUsername.Value) == 0 || len(s.AdminUsername.ValueFrom.Ref) == 0 {
+	if len(s.AdminUsername.Value) == 0 && len(s.AdminUsername.ValueFrom.Ref) == 0 {
 		s.AdminUsername.Value = "admin"
 	}
 }

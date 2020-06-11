@@ -25,7 +25,7 @@ import (
 )
 
 var (
-	wwwDataUserID int64 = 33
+	wwwDataUserID int64 = 82
 )
 
 func (o *Nextcloud) GetOwner() interfaces.Object { return o }
@@ -150,4 +150,8 @@ func (app *Nextcloud) SetDefaults() {
 	app.Spec.Settings.SetDefaults()
 	app.Spec.Settings.SetDefaults()
 
+	// TODO TOFIX
+	if len(app.Spec.Settings.AppSettings.General.Version.Value) == 0 || len(app.Spec.Settings.AppSettings.General.Version.Ref) == 0 {
+		app.Spec.Settings.AppSettings.General.Version.Value = app.Spec.Version
+	}
 }

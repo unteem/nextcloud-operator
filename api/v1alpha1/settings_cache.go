@@ -30,5 +30,7 @@ func (d *Redis) SetDefaults() {
 }
 
 func (s *Redis) GetParameters() *parameters.Parameters {
-	return &parameters.Parameters{}
+	params, _ := parameters.Marshal(*s)
+
+	return &params
 }

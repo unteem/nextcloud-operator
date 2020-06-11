@@ -16,6 +16,8 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"fmt"
+
 	"k8s.libre.sh/application/settings"
 	"k8s.libre.sh/application/settings/parameters"
 	"k8s.libre.sh/meta"
@@ -25,6 +27,7 @@ import (
 
 const nginxConf = `
 	user www-data;
+
 	events {
 	worker_connections 768;
 	}
@@ -33,12 +36,12 @@ const nginxConf = `
 	upstream backend {
 		server {{ .components.app.service.meta.name }}:{{ .components.app.service.port.port }};
 	}
-	include /etc/nginx/mime.types
+	include /etc/nginx/mime.types;
 	default_type application/octet-stream;
 
 	server {
 		listen 80;
-
+		
 		# Add headers to serve security related headers
 		add_header X-Content-Type-Options nosniff;
 		add_header X-XSS-Protection "1; mode=block";
@@ -66,15 +69,15 @@ const nginxConf = `
 		fastcgi_buffers 64 4K;
 
 		gzip off; # handled at haproxy level
-
+	
 		location / {
 			rewrite ^ /index.php;
 		}
-
+		
 		location ~ ^\/(?:build|tests|config|lib|3rdparty|templates|data)\/ {
 			deny all;
 		}
-
+		
 		location ~ ^\/(?:\.|autotest|occ|issue|indie|db_|console) {
 			deny all;
 		}
@@ -142,7 +145,7 @@ func (s *WebSettings) SetDefaults() {
 	//	s.CreateOptions.Init()
 	//	s.CreateOptions.CommonMeta.Labels["app.kubernetes.io/component"] = "web"
 
-	if len(s.ConfTemplate.Value) > 0 || len(s.ConfTemplate.ValueFrom.Ref) == 0 {
+	if len(s.ConfTemplate.Value) == 0 && len(s.ConfTemplate.ValueFrom.Ref) == 0 {
 		s.ConfTemplate.Value = nginxConf
 		s.ConfTemplate.Generate = parameters.GenerateTemplate
 		s.ConfTemplate.MountType = parameters.MountEnvFile
@@ -150,18 +153,21 @@ func (s *WebSettings) SetDefaults() {
 		s.ConfTemplate.MountType = parameters.MountFile
 		s.ConfTemplate.MountPath.Path = "/etc/nginx/nginx.conf"
 		s.ConfTemplate.MountPath.SubPath = "nginx.conf"
+		s.ConfTemplate.Key = "nginx-conf"
 	}
+	fmt.Println(s.ConfTemplate)
 }
 
 func (s *WebSettings) GetConfig() settings.Config {
 
-	params, _ := parameters.Marshal(*s)
+	//	params, _ := parameters.Marshal(*s)
 
+	params := parameters.Parameters{}
+	params = append(params, &s.ConfTemplate)
 	settings := &settings.ConfigSpec{
 		Parameters: &params,
 		Sources:    s.Sources,
 	}
-
 	return settings
 }
 
