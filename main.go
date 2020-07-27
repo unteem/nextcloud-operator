@@ -24,7 +24,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
-	"k8s.libre.sh/application"
+	"k8s.libre.sh/application/reconciler"
 	appsv1alpha1 "k8s.libre.sh/apps/nextcloud/api/v1alpha1"
 	"k8s.libre.sh/apps/nextcloud/controllers"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -79,7 +79,8 @@ func main() {
 
 	if err = (&controllers.NextcloudReconciler{
 		//	ReconcilerBase:      oplibutil.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor(controllerName)),
-		ReconcilerBase: application.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor(controllerName)),
+		Manager:        mgr,
+		ReconcilerBase: reconciler.NewReconcilerBase(mgr.GetClient(), mgr.GetScheme(), mgr.GetConfig(), mgr.GetEventRecorderFor(controllerName)),
 		Log:            ctrl.Log.WithName("controllers").WithName("Nextcloud"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "unable to create controller", "controller", "Nextcloud")

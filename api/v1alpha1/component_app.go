@@ -17,22 +17,19 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
+	"k8s.libre.sh/application/settings/parameters"
 )
 
 func (app *App) SetDefaults() {
-	if &app.Backend.Port == nil || app.Backend.Port.Port == 0 {
-		app.Backend.Port.Port = 9000
+	if &app.Service.Port == nil || app.Service.Port.Port == 0 {
+		app.Service.Port.Port = 9000
 	}
 
-	if len(app.Backend.Port.Protocol) == 0 {
-		app.Backend.Port.Protocol = "TCP"
+	if len(app.Service.Port.Protocol) == 0 {
+		app.Service.Port.Protocol = "TCP"
 	}
-	if len(app.Backend.Port.Name) == 0 {
-		app.Backend.Port.Name = "api"
-	}
-
-	if len(app.Backend.Paths) == 0 {
-		app.Backend.Paths = []string{"/"}
+	if len(app.Service.Port.Name) == 0 {
+		app.Service.Port.Name = "api"
 	}
 
 	if app.SecurityContext == nil {
@@ -52,4 +49,17 @@ func (app *App) SetDefaults() {
 	}
 
 	app.InternalWorkload.SetDefaults()
+
+	installParam := &parameters.Parameter{
+		Value:     "true",
+		Key:       "INSTALLED",
+		MountType: parameters.MountLiteral,
+	}
+
+	if app.Deployment.Parameters == nil {
+		app.Deployment.Parameters = &parameters.Parameters{}
+	}
+
+	*app.Deployment.Parameters = append(*app.Deployment.Parameters, installParam)
+
 }

@@ -16,12 +16,12 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"fmt"
-
 	"k8s.libre.sh/application/settings"
 	"k8s.libre.sh/application/settings/parameters"
+	"k8s.libre.sh/interfaces"
 	"k8s.libre.sh/meta"
 	"k8s.libre.sh/objects"
+
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
@@ -34,7 +34,7 @@ const nginxConf = `
 
 	http {
 	upstream backend {
-		server {{ .components.app.service.meta.name }}:{{ .components.app.service.port.port }};
+		server {{ .components.app.Service.Name }}:{{ .components.app.Service.Port.Port }};
 	}
 	include /etc/nginx/mime.types;
 	default_type application/octet-stream;
@@ -135,37 +135,51 @@ const nginxConf = `
 `
 
 type WebSettings struct {
-	CreateOptions settings.CreateOptions `json:"createOptions,omitempty"`
-	Sources       []settings.Source      `json:"sources,omitempty"`
-	ConfTemplate  parameters.Parameter   `json:"conf,omitempty" env:"nginx-conf"`
+	CreateOptions *settings.CreateOptions `json:"createOptions,omitempty"`
+	Sources       *settings.Sources       `json:"sources,omitempty"`
+	ConfTemplate  *parameters.Parameter   `json:"conf,omitempty" env:"nginx-conf"`
 }
 
 func (s *WebSettings) SetDefaults() {
 
-	//	s.CreateOptions.Init()
-	//	s.CreateOptions.CommonMeta.Labels["app.kubernetes.io/component"] = "web"
+	if len(s.CreateOptions.CommonMeta.GetComponent()) == 0 {
+		s.CreateOptions.CommonMeta.SetComponent("web")
+	}
+
+	meta.SetObjectMeta(s.CreateOptions.CommonMeta, s.CreateOptions.ConfigMeta)
+	meta.SetObjectMeta(s.CreateOptions.CommonMeta, s.CreateOptions.SecretMeta)
+
+	if s.ConfTemplate == nil {
+		s.ConfTemplate = &parameters.Parameter{}
+	}
 
 	if len(s.ConfTemplate.Value) == 0 && len(s.ConfTemplate.ValueFrom.Ref) == 0 {
 		s.ConfTemplate.Value = nginxConf
 		s.ConfTemplate.Generate = parameters.GenerateTemplate
-		s.ConfTemplate.MountType = parameters.MountEnvFile
 		s.ConfTemplate.Type = parameters.ConfigParameter
 		s.ConfTemplate.MountType = parameters.MountFile
 		s.ConfTemplate.MountPath.Path = "/etc/nginx/nginx.conf"
 		s.ConfTemplate.MountPath.SubPath = "nginx.conf"
 		s.ConfTemplate.Key = "nginx-conf"
 	}
-	fmt.Println(s.ConfTemplate)
+
+	if s.Sources == nil {
+		s.Sources = &settings.Sources{}
+	}
+}
+
+func (s *WebSettings) GetParameters() *parameters.Parameters {
+
+	params := parameters.Parameters{}
+	params = append(params, s.ConfTemplate)
+
+	return &params
 }
 
 func (s *WebSettings) GetConfig() settings.Config {
 
-	//	params, _ := parameters.Marshal(*s)
-
-	params := parameters.Parameters{}
-	params = append(params, &s.ConfTemplate)
-	settings := &settings.ConfigSpec{
-		Parameters: &params,
+	settings := &settings.SettingsSpec{
+		Parameters: s.GetParameters(),
 		Sources:    s.Sources,
 	}
 	return settings
@@ -177,10 +191,19 @@ func (s *WebSettings) GetObjects() map[int]objects.Object {
 	return nil
 }
 
-func (s *WebSettings) Init(c client.Client) error {
+func (s *WebSettings) Init(c client.Client, owner interfaces.Object) error {
+	err := settings.Init(s, c, owner)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
+func (s *WebSettings) GetSources() *settings.Sources {
+
+	return s.Sources
+}
+
 func (s *WebSettings) GetCreateOptions() *settings.CreateOptions {
-	return &s.CreateOptions
+	return s.CreateOptions
 }

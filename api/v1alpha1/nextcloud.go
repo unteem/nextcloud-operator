@@ -18,29 +18,22 @@ package v1alpha1
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.libre.sh/application/components"
-	"k8s.libre.sh/application/settings"
+	"k8s.libre.sh/status"
 )
 
 // NextcloudStatus defines the observed state of Nextcloud
 type NextcloudStatus struct {
-	// Version defines the installed version
-	Version  string                    `json:"version,omitempty"`
-	Settings map[string]SettingsStatus `json:"settings,omitempty"`
-	Phase    Phase                     `json:"phase,omitempty"`
-}
-
-type SettingsStatus struct {
-	Sources []settings.Source `json:"sources,omitempty"`
+	status.ApplicationStatus `json:",inline"`
 }
 
 // NextcloudSpec defines the desired state of Nextcloud
 type NextcloudSpec struct {
-	Version  string   `json:"version,omitempty"`
-	Settings Settings `json:"settings,omitempty"`
-	App      *App     `json:"app,omitempty"`
-	Web      *Web     `json:"web,omitempty"`
-	CLI      *CLI     `json:"cli,omitempty"`
-	//	Cron        Component           `json:"cron,omitempty"`
+	Version  string    `json:"version,omitempty"`
+	Settings *Settings `json:"settings,omitempty"`
+	App      *App      `json:"app,omitempty"`
+	Web      *Web      `json:"web,omitempty"`
+	Jobs     *Jobs     `json:"jobs,omitempty"`
+	Cron     *CronJob  `json:"cron,omitempty"`
 }
 
 type App struct {
@@ -51,23 +44,13 @@ type Web struct {
 	*components.Workload `json:",inline"`
 }
 
-type CLI struct {
-	*components.CLI `json:",inline"`
+type Jobs struct {
+	*components.Jobs `json:",inline"`
 }
 
-// Phase is the current status of a App as a whole.
-type Phase string
-
-const (
-	PhaseNone       Phase = ""
-	PhasePlanning   Phase = "Planning"
-	PhaseRunning    Phase = "Running"
-	PhaseCreating   Phase = "Creating"
-	PhaseInstalling Phase = "Installing"
-	PhaseUpgrading  Phase = "Upgrading"
-	PhaseComplete   Phase = "Complete"
-	PhaseFailed     Phase = "Failed"
-)
+type CronJob struct {
+	*components.CronJob `json:",inline"`
+}
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status

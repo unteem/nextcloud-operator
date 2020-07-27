@@ -17,45 +17,45 @@ package v1alpha1
 
 import (
 	"k8s.libre.sh/application"
-	"k8s.libre.sh/application/components"
 	"k8s.libre.sh/application/settings"
-	"k8s.libre.sh/interfaces"
+	"k8s.libre.sh/application/settings/parameters"
 	"k8s.libre.sh/meta"
-	"k8s.libre.sh/objects/job"
+	"k8s.libre.sh/status"
 )
 
 var (
 	wwwDataUserID int64 = 82
 )
 
-func (o *Nextcloud) GetOwner() interfaces.Object { return o }
-func (o *Nextcloud) GetName() string             { return o.Name }
-func (o *Nextcloud) GetNamespace() string        { return o.Namespace }
-func (o *Nextcloud) GetInstance() string         { return o.Name }
-func (o *Nextcloud) SetInstance(s string)        {}
-func (o *Nextcloud) GetVersion() string          { return o.Spec.Version }
-func (o *Nextcloud) SetVersion(s string)         {}
-func (o *Nextcloud) GetComponent() string        { return "instance" }
-func (o *Nextcloud) SetComponent(s string)       {}
-func (o *Nextcloud) GetPartOf() string           { return "Nextcloud" }
-func (o *Nextcloud) SetPartOf(s string)          {}
-func (o *Nextcloud) GetManagedBy() string        { return "Nextcloud-operator" }
-func (o *Nextcloud) SetManagedBy(s string)       {}
-func (o *Nextcloud) GetApplication() string      { return "Nextcloud" }
-func (o *Nextcloud) SetApplication(s string)     {}
+func (o *Nextcloud) GetOwner() status.ObjectWithStatus { return o }
+func (o *Nextcloud) GetName() string                   { return o.Name }
+func (o *Nextcloud) GetNamespace() string              { return o.Namespace }
+func (o *Nextcloud) GetInstance() string               { return o.Name }
+func (o *Nextcloud) SetInstance(s string)              {}
+func (o *Nextcloud) GetVersion() string                { return o.Spec.Version }
+func (o *Nextcloud) SetVersion(s string)               {}
+func (o *Nextcloud) GetComponent() string              { return "instance" }
+func (o *Nextcloud) SetComponent(s string)             {}
+func (o *Nextcloud) GetPartOf() string                 { return "Nextcloud" }
+func (o *Nextcloud) SetPartOf(s string)                {}
+func (o *Nextcloud) GetManagedBy() string              { return "Nextcloud-operator" }
+func (o *Nextcloud) SetManagedBy(s string)             {}
+func (o *Nextcloud) GetApplication() string            { return "Nextcloud" }
+func (o *Nextcloud) SetApplication(s string)           {}
 
-func (o *Nextcloud) GetSettings() map[string]settings.Settings {
+func (o *Nextcloud) GetApplicationStatus() status.ApplicationStatus {
+	return o.Status.ApplicationStatus
+}
 
-	// TODO TO FIX
-	setts := map[string]settings.Settings{
-		"app": settings.NewSettings(&o.Spec.Settings.AppSettings),
-		"web": settings.NewSettings(&o.Spec.Settings.Web),
-	}
+func (o *Nextcloud) SetApplicationStatus(appStatus status.ApplicationStatus) {
+	o.Status.ApplicationStatus = appStatus
+}
 
-	if len(o.Status.Settings) > 0 {
-		for k, v := range o.Status.Settings {
-			setts[k].(*settings.Component).ConfigSpec.Sources = append(setts[k].(*settings.Component).ConfigSpec.Sources, v.Sources...)
-		}
+func (o *Nextcloud) GetSettings() map[string]settings.Component {
+
+	setts := map[string]settings.Component{
+		"app": o.Spec.Settings.AppSettings,
+		"web": o.Spec.Settings.Web,
 	}
 
 	return setts
@@ -64,17 +64,29 @@ func (o *Nextcloud) GetSettings() map[string]settings.Settings {
 func (app *Nextcloud) GetComponentsSyncOrder() map[int]string {
 	return map[int]string{
 		0: "settings",
-		1: "cli",
-		2: "app",
-		3: "web",
+		1: "install",
+		2: "upgrade",
+		3: "app",
+		4: "web",
+		5: "cron",
 	}
 }
 func (app *Nextcloud) GetComponents() map[string]application.Component {
 
 	cpts := map[string]application.Component{
-		"app": app.Spec.App,
-		"web": app.Spec.Web,
-		"cli": app.Spec.CLI,
+		"app":  app.Spec.App,
+		"web":  app.Spec.Web,
+		"cron": app.Spec.Cron,
+	}
+
+	return cpts
+}
+
+func (app *Nextcloud) GetJobs() map[string]application.Component {
+
+	cpts := map[string]application.Component{
+		"install": app.Spec.Jobs.Install,
+		"upgrade": app.Spec.Jobs.Upgrade,
 	}
 
 	return cpts
@@ -84,73 +96,55 @@ func (app *Nextcloud) Init() {
 
 	if app.Spec.App == nil {
 		app.Spec.App = &App{}
-		app.Spec.App.InternalWorkload = &components.InternalWorkload{}
 	}
 
 	if app.Spec.Web == nil {
 		app.Spec.Web = &Web{}
-		app.Spec.Web.Workload = &components.Workload{}
-
 	}
 
-	if app.Spec.CLI == nil {
-		app.Spec.CLI = &CLI{}
-		app.Spec.CLI.CLI = &components.CLI{}
-
+	if app.Spec.Cron == nil {
+		app.Spec.Cron = &CronJob{}
 	}
+
+	if app.Spec.Jobs == nil {
+		app.Spec.Jobs = &Jobs{}
+	}
+
+	app.Spec.Jobs.Init()
 
 	for _, c := range app.GetComponents() {
 		c.Init()
 	}
 
-	if app.Spec.CLI == nil {
-		app.Spec.CLI = &CLI{}
-		app.Spec.CLI.Job = &job.Job{}
+	if app.Spec.Settings == nil {
+		app.Spec.Settings = &Settings{}
 	}
 
-	app.Spec.CLI.Init()
-
-	app.Spec.Settings.AppSettings.CreateOptions.Init()
-	app.Spec.Settings.Web.CreateOptions.Init()
-
-}
-
-func (app *Nextcloud) SetDefaultMeta() {
-
-	app.Spec.Web.ObjectMeta.SetComponent("web")
-
-	// TODO TO FIX create a func in application package
-	for _, c := range app.GetComponents() {
-
-		meta.SetObjectMetaFromInstance(app, c)
-
-		for _, o := range c.GetObjects() {
-			meta.SetObjectMeta(c, o)
-		}
-	}
-
-	// TODO TOFIX
-	meta.SetObjectMeta(app, app.Spec.CLI.ObjectMeta)
-	app.Spec.CLI.ObjectMeta.SetComponent("cli")
-
-	meta.SetObjectMeta(app, app.Spec.Settings.AppSettings.CreateOptions.CommonMeta)
-	app.Spec.Settings.AppSettings.CreateOptions.CommonMeta.Labels["app.kubernetes.io/component"] = "app"
-
-	meta.SetObjectMeta(app, app.Spec.Settings.Web.CreateOptions.CommonMeta)
-	app.Spec.Settings.Web.CreateOptions.CommonMeta.Labels["app.kubernetes.io/component"] = "web"
+	app.Spec.Settings.Init()
 
 }
 
 func (app *Nextcloud) SetDefaults() {
-
+	meta.SetObjectMetaFromInstance(app, app.Spec.App)
 	app.Spec.App.SetDefaults()
-	app.Spec.Web.SetDefaults()
-	app.Spec.CLI.SetDefaults()
 
-	app.Spec.Settings.SetDefaults()
+	meta.SetObjectMetaFromInstance(app, app.Spec.Web)
+	app.Spec.Web.SetDefaults()
+
+	meta.SetObjectMetaFromInstance(app, app.Spec.Jobs)
+	app.Spec.Jobs.SetDefaults()
+
+	meta.SetObjectMetaFromInstance(app, app.Spec.Cron)
+	app.Spec.Cron.SetDefaults()
+
+	meta.SetObjectMetaFromInstance(app, app.Spec.Settings.CreateOptions.CommonMeta)
 	app.Spec.Settings.SetDefaults()
 
 	// TODO TOFIX
+	if app.Spec.Settings.AppSettings.General.Version == nil {
+		app.Spec.Settings.AppSettings.General.Version = &parameters.Parameter{}
+	}
+
 	if len(app.Spec.Settings.AppSettings.General.Version.Value) == 0 || len(app.Spec.Settings.AppSettings.General.Version.Ref) == 0 {
 		app.Spec.Settings.AppSettings.General.Version.Value = app.Spec.Version
 	}

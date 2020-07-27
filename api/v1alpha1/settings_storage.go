@@ -15,18 +15,20 @@ limitations under the License.
 
 package v1alpha1
 
-import "k8s.libre.sh/application/settings/parameters"
+import (
+	"k8s.libre.sh/application/settings/parameters"
+)
 
 type ObjectStore struct {
-	Bucket          parameters.Parameter `json:"bucket,omitempty" env:"OBJECTSTORE_S3_BUCKET"`
-	Host            parameters.Parameter `json:"host,omitempty" env:"OBJECTSTORE_S3_HOST"`
-	Port            parameters.Parameter `json:"port,omitempty" env:"OBJECTSTORE_S3_PORT"`
-	AutoCreate      parameters.Parameter `json:"autocreate,omitempty" env:"OBJECTSTORE_S3_AUTOCREATE"`
-	SSL             parameters.Parameter `json:"ssl,omitempty" env:"OBJECTSTORE_S3_SSL"`
-	Region          parameters.Parameter `json:"region,omitempty" env:"OBJECTSTORE_S3_REGION"`
-	PathStyle       parameters.Parameter `json:"pathStyle,omitempty" env:"OBJECTSTORE_S3_USEPATH_STYLE"`
-	AccessKeyID     parameters.Parameter `json:"accessKeyID,omitempty" env:"OBJECTSTORE_S3_KEY"`
-	SecretAccessKey parameters.Parameter `json:"secretAccessKey,omitempty" env:"OBJECTSTORE_S3_SECRET"`
+	Bucket          *parameters.Parameter `json:"bucket,omitempty" env:"OBJECTSTORE_S3_BUCKET"`
+	Host            *parameters.Parameter `json:"host,omitempty" env:"OBJECTSTORE_S3_HOST"`
+	Port            *parameters.Parameter `json:"port,omitempty" env:"OBJECTSTORE_S3_PORT"`
+	AutoCreate      *parameters.Parameter `json:"autocreate,omitempty" env:"OBJECTSTORE_S3_AUTOCREATE"`
+	SSL             *parameters.Parameter `json:"ssl,omitempty" env:"OBJECTSTORE_S3_SSL"`
+	Region          *parameters.Parameter `json:"region,omitempty" env:"OBJECTSTORE_S3_REGION"`
+	PathStyle       *parameters.Parameter `json:"pathStyle,omitempty" env:"OBJECTSTORE_S3_USEPATH_STYLE"`
+	AccessKeyID     *parameters.Parameter `json:"accessKeyID,omitempty" env:"OBJECTSTORE_S3_KEY"`
+	SecretAccessKey *parameters.Parameter `json:"secretAccessKey,omitempty" env:"OBJECTSTORE_S3_SECRET"`
 }
 
 func (s *ObjectStore) SetDefaults() {
@@ -43,5 +45,5 @@ func (s *ObjectStore) SetDefaults() {
 
 func (s *ObjectStore) GetParameters() *parameters.Parameters {
 	params, _ := parameters.Marshal(*s)
-	return &params
+	return params
 }

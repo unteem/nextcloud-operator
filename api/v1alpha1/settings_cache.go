@@ -20,10 +20,10 @@ import (
 )
 
 type Redis struct {
-	Username parameters.Parameter `json:"username,omitempty" env:"REDIS_USERNAME"`
-	Password parameters.Parameter `json:"password,omitempty" env:"REDIS_PASSWORD"`
-	Host     parameters.Parameter `json:"host,omitempty" env:"REDIS_HOST"`
-	Port     parameters.Parameter `json:"port,omitempty" env:"REDIS_HOST_PORT"`
+	Username *parameters.Parameter `json:"username,omitempty" env:"REDIS_USERNAME"`
+	Password *parameters.Parameter `json:"password,omitempty" env:"REDIS_PASSWORD"`
+	Host     *parameters.Parameter `json:"host,omitempty" env:"REDIS_HOST"`
+	Port     *parameters.Parameter `json:"port,omitempty" env:"REDIS_HOST_PORT"`
 }
 
 func (d *Redis) SetDefaults() {
@@ -32,5 +32,5 @@ func (d *Redis) SetDefaults() {
 func (s *Redis) GetParameters() *parameters.Parameters {
 	params, _ := parameters.Marshal(*s)
 
-	return &params
+	return params
 }

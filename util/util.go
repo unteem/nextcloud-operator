@@ -1,11 +1,6 @@
 package util
 
-import (
-	version "github.com/hashicorp/go-version"
-	appsv1alpha1 "k8s.libre.sh/apps/nextcloud/api/v1alpha1"
-)
-
-//. TOFIX get install status and desired status, if status =! nil ??
+/* //. TOFIX get install status and desired status, if status =! nil ??
 func GetAppPhase(status appsv1alpha1.NextcloudStatus, desiredVersion string) (appsv1alpha1.Phase, error) {
 	// get nextcloud installed version in status
 	if len(status.Version) == 0 {
@@ -31,4 +26,4 @@ func GetAppPhase(status appsv1alpha1.NextcloudStatus, desiredVersion string) (ap
 		return appsv1alpha1.PhaseCreating, nil
 	}
 	return appsv1alpha1.PhaseNone, nil
-}
+} */

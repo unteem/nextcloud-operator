@@ -20,17 +20,17 @@ import (
 )
 
 type SMTP struct {
-	Username      parameters.Parameter `json:"username,omitempty" env:"SMTP_USERNAME"`
-	Password      parameters.Parameter `json:"password,omitempty" env:"SMTP_PASSWORD"`
-	FromAdress    parameters.Parameter `json:"fromAddress,omitempty" env:"MAIL_FROM_ADDRESS"`
-	Domain        parameters.Parameter `json:"domain,omitempty" env:"MAIL_DOMAIN"`
-	Secure        parameters.Parameter `json:"secure,omitempty" env:"SMTP_SECURE"`
-	AuthType      parameters.Parameter `json:"authType,omitempty" env:"SMTP_AUTHTYPE"`
-	Debug         parameters.Parameter `json:"debug,omitempty" env:"SMTP_DEBUG"`
-	Host          parameters.Parameter `json:"host,omitempty" env:"SMTP_HOST"`
-	Port          parameters.Parameter `json:"port,omitempty" env:"SMTP_PORT"`
-	TemplateClass parameters.Parameter `json:"templateClass,omitempty" env:"SMTP_TEMPLATE_CLASS"`
-	PlainTextOnly parameters.Parameter `json:"plainTextOnly,omitempty" env:"SMTP_SEND_PLAINTEXT_ONLY"`
+	Username      *parameters.Parameter `json:"username,omitempty" env:"SMTP_USERNAME"`
+	Password      *parameters.Parameter `json:"password,omitempty" env:"SMTP_PASSWORD"`
+	FromAdress    *parameters.Parameter `json:"fromAddress,omitempty" env:"MAIL_FROM_ADDRESS"`
+	Domain        *parameters.Parameter `json:"domain,omitempty" env:"MAIL_DOMAIN"`
+	Secure        *parameters.Parameter `json:"secure,omitempty" env:"SMTP_SECURE"`
+	AuthType      *parameters.Parameter `json:"authType,omitempty" env:"SMTP_AUTHTYPE"`
+	Debug         *parameters.Parameter `json:"debug,omitempty" env:"SMTP_DEBUG"`
+	Host          *parameters.Parameter `json:"host,omitempty" env:"SMTP_HOST"`
+	Port          *parameters.Parameter `json:"port,omitempty" env:"SMTP_PORT"`
+	TemplateClass *parameters.Parameter `json:"templateClass,omitempty" env:"SMTP_TEMPLATE_CLASS"`
+	PlainTextOnly *parameters.Parameter `json:"plainTextOnly,omitempty" env:"SMTP_SEND_PLAINTEXT_ONLY"`
 }
 
 func (d *SMTP) SetDefaults() {
@@ -39,5 +39,5 @@ func (d *SMTP) SetDefaults() {
 
 func (s *SMTP) GetParameters() *parameters.Parameters {
 	params, _ := parameters.Marshal(*s)
-	return &params
+	return params
 }
