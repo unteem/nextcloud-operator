@@ -1,0 +1,3 @@
+# operator
+Nextcloud kubernetes operator
+

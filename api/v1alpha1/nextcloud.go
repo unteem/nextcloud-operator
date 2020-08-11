@@ -17,8 +17,8 @@ package v1alpha1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.libre.sh/application/components"
-	"k8s.libre.sh/status"
+	"k8s.libre.sh/controller-utils/application/components"
+	"k8s.libre.sh/controller-utils/status"
 )
 
 // NextcloudStatus defines the observed state of Nextcloud

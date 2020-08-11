@@ -16,7 +16,7 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.libre.sh/application/settings/parameters"
+	"k8s.libre.sh/controller-utils/application/settings/parameters"
 )
 
 type Redis struct {

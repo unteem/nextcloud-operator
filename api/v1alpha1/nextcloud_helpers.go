@@ -16,11 +16,11 @@ limitations under the License.
 package v1alpha1
 
 import (
-	"k8s.libre.sh/application"
-	"k8s.libre.sh/application/settings"
-	"k8s.libre.sh/application/settings/parameters"
-	"k8s.libre.sh/meta"
-	"k8s.libre.sh/status"
+	"k8s.libre.sh/controller-utils/application"
+	"k8s.libre.sh/controller-utils/application/settings"
+	"k8s.libre.sh/controller-utils/application/settings/parameters"
+	"k8s.libre.sh/controller-utils/meta"
+	"k8s.libre.sh/controller-utils/status"
 )
 
 var (

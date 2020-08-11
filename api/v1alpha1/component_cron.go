@@ -17,7 +17,7 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
-	"k8s.libre.sh/application/components"
+	"k8s.libre.sh/controller-utils/application/components"
 )
 
 func (app *CronJob) Init() {

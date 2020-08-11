@@ -1,8 +1,8 @@
 package v1alpha1
 
 import (
-	"k8s.libre.sh/application/settings"
-	"k8s.libre.sh/meta"
+	"k8s.libre.sh/controller-utils/application/settings"
+	"k8s.libre.sh/controller-utils/meta"
 )
 
 type Settings struct {

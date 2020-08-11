@@ -17,7 +17,7 @@ package v1alpha1
 
 import (
 	corev1 "k8s.io/api/core/v1"
-	"k8s.libre.sh/application/settings/parameters"
+	"k8s.libre.sh/controller-utils/application/settings/parameters"
 )
 
 func (app *App) SetDefaults() {

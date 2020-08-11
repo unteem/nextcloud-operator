@@ -3,11 +3,11 @@ package v1alpha1
 import (
 	"fmt"
 
-	"k8s.libre.sh/application/settings"
-	"k8s.libre.sh/application/settings/parameters"
-	"k8s.libre.sh/interfaces"
-	"k8s.libre.sh/meta"
-	"k8s.libre.sh/objects"
+	"k8s.libre.sh/controller-utils/application/settings"
+	"k8s.libre.sh/controller-utils/application/settings/parameters"
+	"k8s.libre.sh/controller-utils/interfaces"
+	"k8s.libre.sh/controller-utils/meta"
+	"k8s.libre.sh/controller-utils/objects"
 
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
